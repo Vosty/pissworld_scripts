@@ -9,18 +9,28 @@ console.info('Hello, World! (You will see this line every time server resources 
 
 onEvent('recipes', event => {
 	// Change recipes here
+
+	//Tree Sap
 	event.recipes.create.mixing(Fluid.of('kubejs:tree_sap', 1000), [
 		'minecraft:oak_sapling',
 		'minecraft:oak_sapling',
 		'minecraft:oak_sapling'
 		])
 
+	//Rubber
 	event.recipes.create.compacting('kubejs:rubber', [
 		Fluid.of('kubejs:tree_sap', 250)
 		])
 
-
+	//Rubber into belts
 	event.shapeless('4x create:belt_connector', ['4x kubejs:rubber'])
+
+
+
+	/// Co-op Items (Dark Souls)
+	//TODO:
+	event.shapeled()
+
 })
 
 onEvent('item.tags', event => {
