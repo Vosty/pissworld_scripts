@@ -15,11 +15,13 @@ onEvent('item.registry', event => {
 	})
 
 	/// Co-op Items (Dark Souls Items)
+	// TODO: Tooltips
 	event.create('otherworld_shard', item => {
-		item.displayName('Otherwordly Shard')
+		item.displayName('Otherworldly Shard')
 	})
 	event.create('white_soapstone', item => {
 		item.displayName('White Sign Soapstone')
+		item.maxDamage(100.0)
 	})
 	event.create('cracked_redeye_orb', item=> {
 		item.displayName('Cracked Red-Eye Orb')
@@ -42,6 +44,17 @@ onEvent('block.registry', event => {
 	//Waymark
 	event.create('waymark_core', block => {
 		block.displayName('Waymark Core')
+		block.hardness(0.5)
+	})
+
+	//Created by white soapstone
+	event.create('soapstone_mark', block => {
+		block.displayName('Summon Sign')
+		block.opaque(false)
+		block.box(0, 0, 0, 16, 1, 16, true)
+		block.renderType('cutout')
+		block.noItem()
+		block.noCollision()
 	})
 })
 
