@@ -5,7 +5,12 @@ settings.logRemovedRecipes = true
 settings.logSkippedRecipes = false
 settings.logErroringRecipes = true
 
+//CONFIGS
+const COMMAND_PREFIX = '!'
 
+const WHITE_SOAPSTONE_COMMAND = 'join'
+const WHITE_SOAPSTONE_SUMMON_TIME_IN_TICKS = 60
+const WHITE_SOAPSTONE_TIMEOUT_TIME_IN_TICKS = 300
 
 let summon_sign_pos
 
@@ -53,7 +58,7 @@ onEvent('item.tags', event => {
 
 /// ITEM / BLOCK INTERACTIONS
 onEvent('item.right_click', event => {
-	const world => event.getWorld()
+	const world = event.getWorld()
 
 	if(world.side !== "SERVER") {
 		return
@@ -63,35 +68,52 @@ onEvent('item.right_click', event => {
 
 	if (item.id === 'minecraft:stick') {
 		//waymark logic here
+		let player = event.getPlayer()
+		let lookingAt = player.rayTrace(player.reachDistance)
+		if (lookingAt && lookingAt.block && lookingAt.block == 'minecraft:gold_block') {
+			console.info('GOLD')
+			let below = lookingAt.block.down;
+			let belowBelow = below.down;
+			if (below && belowBelow && below == "minecraft:glass" && belowBelow == "minecraft:glass") {
+				lookingAt.block.set('kubejs:waymark_core')
+				player.tell('Waymark formed!')
+			} 
+		}
 	}
 
 	// Soapstone draw mark
-	if (item.id === 'kubejs:white_soapstone') {
+	if (item.id === 'kubejs:white_soapstone' && event.hand == MAIN_HAND) {
 		let player = event.getPlayer()
 		let lookingAt = player.rayTrace(player.reachDistance)
 		if (lookingAt && lookingAt.block && lookingAt.facing == 'up') {
-			let above = lookingAt.block.above
+			//console.info(lookingAt.block)
+			let above = lookingAt.block.up
+			//console.info(above)
 			above.set('kubejs:soapstone_mark')
+			player.damageHeldItem(MAIN_HAND, 10)
+			console.info(`soapstone mark placed by ${player}`)
 		}
-
-		//TODO: DAMAGE SOAPSTONE
 	}
+
+
 })
 
 
 onEvent('block.right_click', event => {
-	const world => event.getWorld()
+	const world = event.getWorld()
 
 	//WHITE SOAPSTONE
-	if (event.block.id === 'kubejs:soapstone_mark') {
+	if (event.hand == MAIN_HAND && event.block.id === 'kubejs:soapstone_mark') {
+		console.info(`soapstone mark clicked by ${event.player}`)
 		let players = event.server.players
-		for (var i = 0; i < Things.length; i++) {
-			players.forEach(p => {
-				p.tell(`${player.name} is summoning you to his world...`)
-				p.tell('type !accept to join')
-			})
-		}
+		players.forEach(p => {
+			p.tell(`${p.name} is summoning you to his world...`)
+			p.tell(`type ${COMMAND_PREFIX}${WHITE_SOAPSTONE_COMMAND} to be summoned`)
+		})
 		summon_sign_pos = event.block.pos
+		event.server.scheduleInTicks(WHITE_SOAPSTONE_TIMEOUT_TIME_IN_TICKS, function(callback) {
+			summon_sign_pos = null
+		})
 	}
 
 })
@@ -99,13 +121,20 @@ onEvent('block.right_click', event => {
 
 
 onEvent('player.chat', function (event) {
-  
+  if (event.message.startsWith(COMMAND_PREFIX) == false) {
+  	return
+  }
+
+  let message = event.message
+  console.info(`player command: ${message}`)
 
   //WHITE SOAPSTONE
-  if (event.message.equals('!accept')) {
-    event.player.tell('Being summoned to another world...')
+  if (message.equals(COMMAND_PREFIX + WHITE_SOAPSTONE_COMMAND)) {
     if (summon_sign_pos) {
-    	    event.server.runCommandSilent(`/tp ${event.player} ${summon_sign_pos.x} ${summon_sign_pos.y} ${summon_sign_pos.z}`)
+    	    event.player.tell('Being summoned to another world...')
+    	    event.server.scheduleInTicks(WHITE_SOAPSTONE_SUMMON_TIME_IN_TICKS, function(callback) {
+    	    	callback.server.runCommandSilent(`/tp ${event.player} ${summon_sign_pos.x} ${summon_sign_pos.y} ${summon_sign_pos.z}`)
+    	    })
     } else {
     	event.player.tell('Not currently being summoned!')
     }
