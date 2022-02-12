@@ -6,7 +6,7 @@ settings.logSkippedRecipes = false
 settings.logErroringRecipes = true
 
 //CONFIGS
-const TEST_MODE = false //Allows players to do things like invade themselves
+const TEST_MODE = true //Allows players to do things like invade themselves
 
 const COMMAND_PREFIX = '!'
 
@@ -18,10 +18,22 @@ const REDEYE_INVASION_TIME_IN_TICKS = 160
 const REDEYE_INVASION_DISTANCE_FROM_PLAYER = 45
 const REDEYE_INVSASION_MIN_DISTANCE_FROM_PLAYER = 16
 
-let summon_sign_pos
+let summon_sign_pos = null
+let summon_sign_dim = null
+let summoner = null
 
 
 let PI = 3.141592653
+
+
+let getOtherPlayers = function(event) {
+	let player = event.player
+	let allPlayers = event.server.players
+	let otherPlayers = allPlayers.filter(function(value) {
+			return value.name == player.name || TEST_MODE
+		})
+	return otherPlayers
+}
 
 
 console.info('Hello, World! (You will see this line every time server resources reload)')
@@ -121,9 +133,7 @@ onEvent('item.right_click', event => {
 	if (item === 'kubejs:cracked_redeye_orb') {
 		let player = event.player
 		let allPlayers = event.server.players
-		let worldsToInvade = allPlayers.filter(function(value) {
-			return value.name == player.name || TEST_MODE
-		})
+		let worldsToInvade = getOtherPlayers(event)
 		if (worldsToInvade.length == 0) {
 			player.tell('No worlds to invade')
 			return
@@ -131,13 +141,16 @@ onEvent('item.right_click', event => {
 		let rand = Math.round(Math.random() * (worldsToInvade.length-1))
 		console.info(rand)
 		let invaded = worldsToInvade[rand]
+		let invadeWorld = invaded.world
 		console.info(`${invaded} is being invaded!`)
-		console.info(`${invaded} is at ${invaded.x} ${invaded.y} ${invaded.z}`)
+		console.info(`${invaded} is at ${invaded.x} ${invaded.y} ${invaded.z} in ${invadeWorld}.dimension`)
 		player.tell('Searching for worlds to invade...')
 
 		//find proper spot to invade player
+		//pick random angle, then arc around player searching for open spots
+		//if no spot is found, move in slightly until minimum distance is reached
 		let randomAngle = Math.random() * PI * 2.0
-		console.info(randomAngle)
+		//console.info(randomAngle)
 		let goodPlaceX
 		let goodPlaceY = invaded.y
 		let goodPlaceZ
@@ -149,7 +162,8 @@ onEvent('item.right_click', event => {
 				goodPlaceX = dist * Math.cos(a + randomAngle) + invaded.x
 				goodPlaceZ = dist * Math.sin(a + randomAngle) + invaded.z
 
-				let block = world.getBlock(goodPlaceX, goodPlaceY, goodPlaceZ)
+				let block = invadeWorld.getBlock(goodPlaceX, goodPlaceY, goodPlaceZ)
+				//Health check: two spaces of open air on solid ground
 				if (block === 'minecraft:air' && block.up === 'minecraft:air' && block.down !== 'minecraft:air') {
 					placeFound = true
 					break
@@ -161,12 +175,13 @@ onEvent('item.right_click', event => {
 			}
 		}
 
+		//send the player
 		if (placeFound) {
 			event.server.scheduleInTicks(REDEYE_INVASION_TIME_IN_TICKS, function(callback) {
-				invaded.tell(`Dark spirit ${player} has invaded!`)
+				invaded.tell([`Dark spirit `, Text.red(`${player}`), ` has invaded!`])
 				player.tell(`Invaded world of ${invaded}`)
-				console.info(`Teleporting ${player} to ${goodPlaceX} ${goodPlaceY} ${goodPlaceZ}`)
-				event.server.runCommandSilent(`/tp ${player} ${goodPlaceX} ${goodPlaceY} ${goodPlaceZ}`)
+				console.info(`Teleporting ${player} to ${goodPlaceX} ${goodPlaceY} ${goodPlaceZ} in ${invadeWorld.dimension}`)
+				event.server.runCommandSilent(`/execute in ${invadeWorld.dimension} run tp ${player} ${goodPlaceX} ${goodPlaceY} ${goodPlaceZ}`)
 			})
 		} else {
 			console.info('invasion failed')
@@ -186,18 +201,32 @@ onEvent('item.right_click', event => {
 
 onEvent('block.right_click', event => {
 	const world = event.getWorld()
+	const player = event.player
+
+	if(world.side !== "SERVER") {
+		return
+	}
 
 	//WHITE SOAPSTONE
 	if (event.hand == MAIN_HAND && event.block.id === 'kubejs:soapstone_mark') {
+		if (summon_sign_pos) {
+			player.tell('Someone is already summoning!')
+			return
+		}
 		console.info(`soapstone mark clicked by ${event.player}`)
-		let players = event.server.players
+		player.tell('Summoning white phantoms to your world')
+		let players = getOtherPlayers(event)
 		players.forEach(p => {
 			p.tell(`${p.name} is summoning you to his world...`)
 			p.tell(`type ${COMMAND_PREFIX}${WHITE_SOAPSTONE_COMMAND} to be summoned`)
 		})
 		summon_sign_pos = event.block.pos
+		summon_sign_dim = event.block.dimension
+		summoner = player.name
 		event.server.scheduleInTicks(WHITE_SOAPSTONE_TIMEOUT_TIME_IN_TICKS, function(callback) {
 			summon_sign_pos = null
+			summon_sign_dim = null
+			summoner = null
 		})
 	}
 
@@ -210,16 +239,28 @@ onEvent('player.chat', function (event) {
   	return
   }
 
+  if(event.world.side !== "SERVER") {
+	return
+  }
+
   let message = event.message
   console.info(`player command: ${message}`)
 
   //WHITE SOAPSTONE
   if (message.equals(COMMAND_PREFIX + WHITE_SOAPSTONE_COMMAND)) {
+  	if (event.player.name.equals(summoner) && !TEST_MODE) {
+  		event.player.tell('You can not be summoned to your own world!')
+  		event.cancel()
+  		return
+  	}
     if (summon_sign_pos) {
-    	    event.player.tell('Being summoned to another world...')
-    	    event.server.scheduleInTicks(WHITE_SOAPSTONE_SUMMON_TIME_IN_TICKS, function(callback) {
-    	    	callback.server.runCommandSilent(`/tp ${event.player} ${summon_sign_pos.x} ${summon_sign_pos.y} ${summon_sign_pos.z}`)
-    	    })
+	    event.player.tell('Being summoned to another world...')
+	    //event.player.paint({soapstone_summon: {type: 'rectangle', texture: 'kubejs:screen/white_particles.png', x:0, y:0, w:'$screenW', h:'$screenH'}})
+	    console.info(`${event.player} has been summoned to world of ${summoner}`)
+	    event.server.scheduleInTicks(WHITE_SOAPSTONE_SUMMON_TIME_IN_TICKS, function(callback) {
+	    	//event.player.paint({soapstone_summon: {remove: true}})
+	    	callback.server.runCommandSilent(`/execute in ${summon_sign_dim} run tp ${event.player} ${summon_sign_pos.x} ${summon_sign_pos.y} ${summon_sign_pos.z}`)
+	    })
     } else {
     	event.player.tell('Not currently being summoned!')
     }
