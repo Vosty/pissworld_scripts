@@ -91,12 +91,31 @@ onEvent('item.right_click', event => {
 		let player = event.getPlayer()
 		let lookingAt = player.rayTrace(player.reachDistance)
 		if (lookingAt && lookingAt.block && lookingAt.block == 'minecraft:gold_block') {
-			console.info('GOLD')
+			//console.info('GOLD')
 			let below = lookingAt.block.down;
 			let belowBelow = below.down;
 			if (below && belowBelow && below == "minecraft:glass" && belowBelow == "minecraft:glass") {
 				lookingAt.block.set('kubejs:waymark_core')
 				player.tell('Waymark formed!')
+
+				let markData = NBT.compoundTag()
+				markData.x = lookingAt.block.x
+				markData.y = lookingAt.block.y
+				markData.z = lookingAt.block.z
+				markData.dimension = world.dimension
+				markData.public = true
+				markData.owner = player.name
+				makrData.markName = "pissTown"
+
+				console.info(markData)
+
+				if (!event.server.persistentData.wayMarks) {
+					event.server.persistentData.wayMarks = NBT.listTag()
+				}
+
+				event.server.persistentData.wayMarks.add(markData)
+
+				console.info(event.server.persistentData.wayMarks)
 			} 
 		}
 	}
@@ -143,7 +162,7 @@ onEvent('item.right_click', event => {
 		let invaded = worldsToInvade[rand]
 		let invadeWorld = invaded.world
 		console.info(`${invaded} is being invaded!`)
-		console.info(`${invaded} is at ${invaded.x} ${invaded.y} ${invaded.z} in ${invadeWorld}.dimension`)
+		console.info(`${invaded} is at ${invaded.x} ${invaded.y} ${invaded.z} in ${invadeWorld.dimension}`)
 		player.tell('Searching for worlds to invade...')
 
 		//find proper spot to invade player
@@ -182,6 +201,9 @@ onEvent('item.right_click', event => {
 				player.tell(`Invaded world of ${invaded}`)
 				console.info(`Teleporting ${player} to ${goodPlaceX} ${goodPlaceY} ${goodPlaceZ} in ${invadeWorld.dimension}`)
 				event.server.runCommandSilent(`/execute in ${invadeWorld.dimension} run tp ${player} ${goodPlaceX} ${goodPlaceY} ${goodPlaceZ}`)
+				event.server.runCommandSilent(`/playsound minecraft:block.portal.travel block ${player} ${goodPlaceX} ${goodPlaceY} ${goodPlaceZ} 0.5`)
+				event.server.runCommandSilent(`/playsound minecraft:block.portal.travel block ${invaded} ${goodPlaceX} ${goodPlaceY} ${goodPlaceZ} 1.0`)
+
 			})
 		} else {
 			console.info('invasion failed')
@@ -259,7 +281,13 @@ onEvent('player.chat', function (event) {
 	    console.info(`${event.player} has been summoned to world of ${summoner}`)
 	    event.server.scheduleInTicks(WHITE_SOAPSTONE_SUMMON_TIME_IN_TICKS, function(callback) {
 	    	//event.player.paint({soapstone_summon: {remove: true}})
-	    	callback.server.runCommandSilent(`/execute in ${summon_sign_dim} run tp ${event.player} ${summon_sign_pos.x} ${summon_sign_pos.y} ${summon_sign_pos.z}`)
+	    	if (summon_sign_pos && summon_sign_dim && summoner) {
+	    		callback.server.runCommandSilent(`/execute in ${summon_sign_dim} run tp ${event.player} ${summon_sign_pos.x} ${summon_sign_pos.y} ${summon_sign_pos.z}`)
+	    		//callback.server.runCommandSilent(`/playsound minecraft:block.portal.travel block @a[distance=...20.0] ${summon_sign_pos.x} ${summon_sign_pos.y} ${summon_sign_pos.z} 0.5`)
+	    	} else {
+	    		event.player.tell('Summon timed out')
+	    	}
+	    	
 	    })
     } else {
     	event.player.tell('Not currently being summoned!')
