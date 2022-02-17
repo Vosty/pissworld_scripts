@@ -10,6 +10,11 @@ const TEST_MODE = true //Allows players to do things like invade themselves
 
 const COMMAND_PREFIX = '!'
 
+const WAYMARK_WARP_COMMAND = 'waywarp'
+const WAYMARK_WARP_COMMAND_ALIAS = 'ww'
+const WAYMARK_LIST_COMMAND = 'waylist'
+const WAYMARK_RENAME_COMMAND = 'wayrename'
+
 const WHITE_SOAPSTONE_COMMAND = 'join'
 const WHITE_SOAPSTONE_SUMMON_TIME_IN_TICKS = 60
 const WHITE_SOAPSTONE_TIMEOUT_TIME_IN_TICKS = 300
@@ -17,6 +22,8 @@ const WHITE_SOAPSTONE_TIMEOUT_TIME_IN_TICKS = 300
 const REDEYE_INVASION_TIME_IN_TICKS = 160
 const REDEYE_INVASION_DISTANCE_FROM_PLAYER = 45
 const REDEYE_INVSASION_MIN_DISTANCE_FROM_PLAYER = 16
+
+const BLACK_SEPARATION_CRYSTAL_TIME_IN_TICKS = 200
 
 let summon_sign_pos = null
 let summon_sign_dim = null
@@ -35,6 +42,40 @@ let getOtherPlayers = function(event) {
 	return otherPlayers
 }
 
+let getWaymark = function(event, name) {
+	if (!event.server.persistentData || !event.server.persistentData.waymarks) {
+		console.info('Uh oh! No waymark data found')
+		return
+	}
+	waymarks = event.server.persistentData.waymarks
+	waymarks.forEach(wm => {
+		if (name === wm.markName) {
+			return wm
+		}
+	})
+	console.info(`No waymark found with name: ${name}`)
+	return null
+}
+
+let waymarkNameGenerator = function(markData) {
+	let name = markData.owner
+	switch (markData.dimension) {
+		case 'minecraft:overworld':
+			name+='OW'
+			break
+		case 'minecraft:the_nether':
+			name+='NE'
+			break
+		case 'minecraft:the_end'*
+			name+='ED'
+			break
+	}
+	name += Math.round(markData.x) + 'x'
+	name += Math.round(markData.y) + 'y'
+	name += Math.round(markData.z) + 'z'
+
+	return name
+}
 
 console.info('Hello, World! (You will see this line every time server resources reload)')
 ///
@@ -105,17 +146,17 @@ onEvent('item.right_click', event => {
 				markData.dimension = world.dimension
 				markData.public = true
 				markData.owner = player.name
-				makrData.markName = "pissTown"
+				makrData.markName = waymarkNameGenerator(markData)
 
 				console.info(markData)
 
-				if (!event.server.persistentData.wayMarks) {
-					event.server.persistentData.wayMarks = NBT.listTag()
+				if (!event.server.persistentData.waymarks) {
+					event.server.persistentData.waymarks = NBT.listTag()
 				}
 
-				event.server.persistentData.wayMarks.add(markData)
+				event.server.persistentData.waymarks.add(markData)
 
-				console.info(event.server.persistentData.wayMarks)
+				console.info(event.server.persistentData.waymarks)
 			} 
 		}
 	}
@@ -139,7 +180,7 @@ onEvent('item.right_click', event => {
 		let player = event.getPlayer()
 		let spawnpoint = player.getSpawnLocation()
 		let hand = event.hand
-		event.server.runCommandSilent(`/tp ${player} ${spawnpoint.x} ${spawnpoint.y} ${spawnpoint.z}`)
+		event.server.runCommandSilent(`/execute in ${spawnpoint.dimension} run tp ${player} ${spawnpoint.x} ${spawnpoint.y} ${spawnpoint.z}`)
 		if (hand == MAIN_HAND) {
 			player.getMainHandItem().count--
 		} else {
@@ -197,12 +238,20 @@ onEvent('item.right_click', event => {
 		//send the player
 		if (placeFound) {
 			event.server.scheduleInTicks(REDEYE_INVASION_TIME_IN_TICKS, function(callback) {
-				invaded.tell([`Dark spirit `, Text.red(`${player}`), ` has invaded!`])
-				player.tell(`Invaded world of ${invaded}`)
+				let separation_crystal_pos = NBT.compoundTag()
+				separation_crystal_pos.x = player.x
+				separation_crystal_pos.y = player.y
+				separation_crystal_pos.z = player.z
+				separation_crystal_dim = player.world.dimension
+				player.persistentData.separation_pos = separation_crystal_pos
+
 				console.info(`Teleporting ${player} to ${goodPlaceX} ${goodPlaceY} ${goodPlaceZ} in ${invadeWorld.dimension}`)
 				event.server.runCommandSilent(`/execute in ${invadeWorld.dimension} run tp ${player} ${goodPlaceX} ${goodPlaceY} ${goodPlaceZ}`)
+				event.server.runCommandSilent(`/give ${player} kubejs:black_separation_crystal`)
 				event.server.runCommandSilent(`/playsound minecraft:block.portal.travel block ${player} ${goodPlaceX} ${goodPlaceY} ${goodPlaceZ} 0.5`)
 				event.server.runCommandSilent(`/playsound minecraft:block.portal.travel block ${invaded} ${goodPlaceX} ${goodPlaceY} ${goodPlaceZ} 1.0`)
+				invaded.tell([`Dark spirit `, Text.red(`${player}`), ` has invaded!`])
+				player.tell(`Invaded world of ${invaded}`)
 
 			})
 		} else {
@@ -215,6 +264,29 @@ onEvent('item.right_click', event => {
 			player.getMainHandItem().count--
 		} else {
 			player.getOffHandItem().count--
+		}
+	}
+
+	// Black Separation Crystal
+	if (item == 'kubejs:black_separation_crystal') {
+		let player = event.player
+		let data = null
+		let hand = event.hand
+		if (player.persistentData && player.persistentData.separation_pos) {
+			player.tell('Returning you to your world...')
+			data = player.persistentData.separation_pos
+		} else {
+			player.tell('Return point not found! Sending to spawn point...')
+			data = player.getSpawnLocation()
+		}
+		if (hand == MAIN_HAND) {
+			player.getMainHandItem().count--
+		} else {
+			player.getOffHandItem().count--
+		}
+		event.server.scheduleInTicks(BLACK_SEPARATION_CRYSTAL_TIME_IN_TICKS, function(callback)) {
+			callback.server.runCommandSilent(`/execute in ${data.dimension} run tp ${player} ${data.x} ${data.y} ${data.z}`)
+
 		}
 	}
 
@@ -279,10 +351,19 @@ onEvent('player.chat', function (event) {
 	    event.player.tell('Being summoned to another world...')
 	    //event.player.paint({soapstone_summon: {type: 'rectangle', texture: 'kubejs:screen/white_particles.png', x:0, y:0, w:'$screenW', h:'$screenH'}})
 	    console.info(`${event.player} has been summoned to world of ${summoner}`)
+
+	    let separation_crystal_pos = NBT.compoundTag()
+		separation_crystal_pos.x = event.player.x
+		separation_crystal_pos.y = event.player.y
+		separation_crystal_pos.z = event.player.z
+		separation_crystal_dim = event.player.world.dimension
+		event.player.persistentData.separation_pos = separation_crystal_pos
+
 	    event.server.scheduleInTicks(WHITE_SOAPSTONE_SUMMON_TIME_IN_TICKS, function(callback) {
 	    	//event.player.paint({soapstone_summon: {remove: true}})
 	    	if (summon_sign_pos && summon_sign_dim && summoner) {
 	    		callback.server.runCommandSilent(`/execute in ${summon_sign_dim} run tp ${event.player} ${summon_sign_pos.x} ${summon_sign_pos.y} ${summon_sign_pos.z}`)
+	    		callback.server.runCommandSilent(`/give ${event.player} kubejs:black_separation_crystal`)
 	    		//callback.server.runCommandSilent(`/playsound minecraft:block.portal.travel block @a[distance=...20.0] ${summon_sign_pos.x} ${summon_sign_pos.y} ${summon_sign_pos.z} 0.5`)
 	    	} else {
 	    		event.player.tell('Summon timed out')
