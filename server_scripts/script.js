@@ -10,11 +10,6 @@ const TEST_MODE = true //Allows players to do things like invade themselves
 
 const COMMAND_PREFIX = '!'
 
-const WAYMARK_WARP_COMMAND = 'waywarp'
-const WAYMARK_WARP_COMMAND_ALIAS = 'ww'
-const WAYMARK_LIST_COMMAND = 'waylist'
-const WAYMARK_RENAME_COMMAND = 'wayrename'
-
 const WHITE_SOAPSTONE_COMMAND = 'join'
 const WHITE_SOAPSTONE_SUMMON_TIME_IN_TICKS = 60
 const WHITE_SOAPSTONE_TIMEOUT_TIME_IN_TICKS = 300
@@ -42,40 +37,7 @@ let getOtherPlayers = function(event) {
 	return otherPlayers
 }
 
-let getWaymark = function(event, name) {
-	if (!event.server.persistentData || !event.server.persistentData.waymarks) {
-		console.info('Uh oh! No waymark data found')
-		return
-	}
-	waymarks = event.server.persistentData.waymarks
-	waymarks.forEach(wm => {
-		if (name === wm.markName) {
-			return wm
-		}
-	})
-	console.info(`No waymark found with name: ${name}`)
-	return null
-}
 
-let waymarkNameGenerator = function(markData) {
-	let name = markData.owner
-	switch (markData.dimension) {
-		case 'minecraft:overworld':
-			name+='OW'
-			break
-		case 'minecraft:the_nether':
-			name+='NE'
-			break
-		case 'minecraft:the_end'*
-			name+='ED'
-			break
-	}
-	name += Math.round(markData.x) + 'x'
-	name += Math.round(markData.y) + 'y'
-	name += Math.round(markData.z) + 'z'
-
-	return name
-}
 
 console.info('Hello, World! (You will see this line every time server resources reload)')
 ///
@@ -126,40 +88,6 @@ onEvent('item.right_click', event => {
 	}
 
 	const item = event.getItem()
-
-	if (item.id === 'minecraft:stick') {
-		//waymark logic here
-		let player = event.getPlayer()
-		let lookingAt = player.rayTrace(player.reachDistance)
-		if (lookingAt && lookingAt.block && lookingAt.block == 'minecraft:gold_block') {
-			//console.info('GOLD')
-			let below = lookingAt.block.down;
-			let belowBelow = below.down;
-			if (below && belowBelow && below == "minecraft:glass" && belowBelow == "minecraft:glass") {
-				lookingAt.block.set('kubejs:waymark_core')
-				player.tell('Waymark formed!')
-
-				let markData = NBT.compoundTag()
-				markData.x = lookingAt.block.x
-				markData.y = lookingAt.block.y
-				markData.z = lookingAt.block.z
-				markData.dimension = world.dimension
-				markData.public = true
-				markData.owner = player.name
-				makrData.markName = waymarkNameGenerator(markData)
-
-				console.info(markData)
-
-				if (!event.server.persistentData.waymarks) {
-					event.server.persistentData.waymarks = NBT.listTag()
-				}
-
-				event.server.persistentData.waymarks.add(markData)
-
-				console.info(event.server.persistentData.waymarks)
-			} 
-		}
-	}
 
 	// Soapstone draw mark
 	if (item.id === 'kubejs:white_soapstone' /*&& event.hand == MAIN_HAND*/) {
@@ -217,7 +145,7 @@ onEvent('item.right_click', event => {
 		let placeFound = false
 		for (let dist = REDEYE_INVASION_DISTANCE_FROM_PLAYER; dist >= REDEYE_INVSASION_MIN_DISTANCE_FROM_PLAYER; dist--) {
 			//console.info(`checking distance: ${dist}`)
-			for (let a = 0.0; a < PI * 2.0 + randomAngle; a = a+1.0) {
+			for (let a = 0.0; a < PI * 2.0; a += PI * 2 / 32) {
 				//console.long(checking angle)
 				goodPlaceX = dist * Math.cos(a + randomAngle) + invaded.x
 				goodPlaceZ = dist * Math.sin(a + randomAngle) + invaded.z
