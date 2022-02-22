@@ -81,13 +81,13 @@ onEvent('item.tags', event => {
 
 /// ITEM / BLOCK INTERACTIONS
 onEvent('item.right_click', event => {
-	const world = event.getWorld()
+	let world = event.getWorld()
 
 	if(world.side !== "SERVER") {
 		return
 	}
 
-	const item = event.getItem()
+	let item = event.getItem()
 
 	// Soapstone draw mark
 	if (item.id === 'kubejs:white_soapstone' /*&& event.hand == MAIN_HAND*/) {
@@ -101,6 +101,7 @@ onEvent('item.right_click', event => {
 			player.damageHeldItem(event.hand, 10)
 			console.info(`soapstone mark placed by ${player}`)
 		}
+		return
 	}
 
 	// Homeward bone
@@ -114,7 +115,7 @@ onEvent('item.right_click', event => {
 		} else {
 			player.getOffHandItem().count--
 		}
-
+		return
 	}
 
 	// Cracked Redeye Orb
@@ -193,6 +194,7 @@ onEvent('item.right_click', event => {
 		} else {
 			player.getOffHandItem().count--
 		}
+		return
 	}
 
 	// Black Separation Crystal
@@ -216,14 +218,15 @@ onEvent('item.right_click', event => {
 			callback.server.runCommandSilent(`/execute in ${data.dimension} run tp ${player} ${data.x} ${data.y} ${data.z}`)
 
 		}
+		return
 	}
 
 })
 
 
 onEvent('block.right_click', event => {
-	const world = event.getWorld()
-	const player = event.player
+	let world = event.getWorld()
+	let player = event.player
 
 	if(world.side !== "SERVER") {
 		return
@@ -250,6 +253,7 @@ onEvent('block.right_click', event => {
 			summon_sign_dim = null
 			summoner = null
 		})
+		return
 	}
 
 })
@@ -302,5 +306,6 @@ onEvent('player.chat', function (event) {
     	event.player.tell('Not currently being summoned!')
     }
     event.cancel()
+    return
   }
 })

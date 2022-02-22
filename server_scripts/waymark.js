@@ -47,7 +47,7 @@ let getWayMarkByPos = function(event, dimension, x, y, z) {
 			return wm
 		}
 	})
-	console.info(`No waymark found with name: ${name}`)
+	console.info(`No waymark found with pos ${dimension} ${x} ${y} ${z}`)
 	return null
 }
 
@@ -204,7 +204,7 @@ onEvent('item.right_click', event => {
 
 
 onEvent('player.chat', function (event) {
-    if (event.message.startsWith(COMMAND_PREFIX) == false || event.world.side !== "SERVER") {
+    if (!event.message.startsWith(COMMAND_PREFIX)|| event.world.side !== "SERVER") {
   		return
   	}
 
@@ -232,7 +232,8 @@ onEvent('player.chat', function (event) {
   		} else {
   			event.player.tell(`Improper Usage; please use ${COMMAND_PREFIX}${WAYMARK_WARP_COMMAND} <waymark name>`)
   		}
-
+  		event.cancel()
+  		return
   	}
 
 
@@ -240,6 +241,7 @@ onEvent('player.chat', function (event) {
 	  	if (!event.server.persistentData || !event.server.persistentData.waymarks) {
 			console.info('Uh oh! No waymark data found')
 			event.player.tell('No waymark data found')
+			event.cancel()
 			return
 		}
 		waymarks = event.server.persistentData.waymarks
@@ -255,12 +257,89 @@ onEvent('player.chat', function (event) {
 			}
 		})
 		event.player.tell(wmList)
+		event.cancel()
+		return
   	}
 
   	// TODO: handle rename
+  	if (message.startsWith(COMMAND_PREFIX + WAYMARK_RENAME_COMMAND)) {
+		message = message.substring(message.indexOf(' ') + 1)
+		let split = message.split(`${WAYMARK_RENAME_SPLIT_DELIMITER}`)
+		if (split.length == 2 ) {
+			let oldName == split[0].trim()
+			let newName == split[1].trim()
+			let wm = getWaymarkByName(event, oldName)
+			if (wm == null) {
+				event.player.tell(`No waymark found with name ${oldName}`)
+				event.cancel()
+				return
+			}
+			if (wm.owner !== event.player.name) {
+				event.player.tell('You can not rename waymarks you do not own!')
+				event.cancel
+				return
+			}
+			let existing = getWaymarkByName(event, newName) // Should return null
+			if (existing) {
+				event.player.tell(`A waymark with name ${newName} already exists!`)
+				event.cancel()
+				return
+			}
+			for (let i = 0; i < event.server.persistentData.waymarks.length) {
+				if (wm == event.server.persistentData.waymarks.get(i)) {
+					// Delete old entry, add copy of entry into old position (keeps list consistent)
+					event.server.persistentData.waymarks.remove(i)
+					wm.markName = newName
+					event.server.persistentData.waymarks.add(i, wm)
+					break
+				}
+			}
+			event.player.tell(`Waymark ${oldName} successfully renamed to ${newName}`)
+		} else {
+			event.player.tell(`Improper Usage; please use ${COMMAND_PREFIX}${WAYMARK_RENAME_COMMAND} <old name> ${WAYMARK_RENAME_SPLIT_DELIMITER} <new name>`)
+		}
+		event.cancel()
+		return
+  	}
 }
 
 
-// TODO: mark breaking code
+onEvent('block.break', function (event) {
+	let world = event.world
 
-// TODO: right click message
+	if(world.side !== "SERVER") {
+		return
+	}
+	if (event.block.id === 'kubejs:waymark_core' || event.block.id === 'kubejs:waymark_private_core') {
+		let block = event.block
+
+		for (let i = 0; i < event.server.persistentData.waymarks.length; i++) {
+			let wm = event.server.persistentData.waymarks.get(i)
+			if (world.dimension === wm.dimension && block.x == wm.x && block.y == wm.y && block.z == wm.z) {
+				event.server.persistentData.waymarks.remove(i)
+				event.player.tell(`Waymark ${wm.markName} removed`)
+				return
+			}
+		}
+		console.info(`No waymark found with position ${dimension} ${x} ${y} ${z}`)
+		event.player.tell('Destroyed a waymark core with no registered position.')
+		event.player.tell('....What did you do?')
+	}
+}
+
+onEvent('block.right_click', event => {
+	let world = event.world
+	let player = event.player
+
+	if(world.side !== "SERVER") {
+		return
+	}
+
+	//WHITE SOAPSTONE
+	let block = event.block
+	if (event.hand == MAIN_HAND && (block.id === 'kubejs:waymark_core' || block.id ==='kubejs:waymark_private_core')) {
+		let waymark = getWayMarkByPos(event, world.dimension, block.x, block.y, block.z)
+		if (waymark) { player.tell(`Waymark Name: ${waymark.markName}    Owner: ${waymark.owner}`) }
+		player.tell(`Use ${COMMAND_PREFIX}${WAYMARK_WARP_COMMAND} <waymark name> or ${COMMAND_PREFIX}${WAYMARK_WARP_COMMAND_ALIAS} <waymark name> to warp`)
+	}
+}

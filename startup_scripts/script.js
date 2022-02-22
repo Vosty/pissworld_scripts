@@ -21,24 +21,18 @@ onEvent('item.registry', event => {
 	})
 	event.create('white_soapstone', item => {
 		item.displayName('White Sign Soapstone')
-		item.unstackable()
 		item.maxDamage(100.0)
-		item.tooltip('Summons players from another world to assist you')
 	})
 	event.create('cracked_redeye_orb', item=> {
 		item.displayName('Cracked Red-Eye Orb')
-		item.tooltip('Use to invade the world of other players')
-
 	})
-	event.create('sunlight_medal', item => {
+	/*event.create('sunlight_medal', item => {
 		item.displayName('Sunlight Medallion')
-	})
+	})*/
 	event.create('black_separation_crystal', item => {
 		item.displayName('Black Separation Crystal')
-		item.tooltip('Use to go home from another world')
-
 	})
-	event.create('homeward_bone', item => {
+	even.create('homeward_bone', item => {
 		item.displayName('Homeward Bone')
 	})
 
@@ -50,19 +44,29 @@ onEvent('block.registry', event => {
 	//Waymark
 	event.create('waymark_core', block => {
 		block.displayName('Waymark Core')
-		block.hardness(0.5)
+		block.hardness(10.0)
+		block.noDrops()
+		block.noItem()
 	})
+	event.create('waymark_private_core', block => {
+		block.displayName('Waymark Core')
+		block.hardness(10.0)
+		block.noDrops()
+		block.noItem()
+
+	})
+
 
 	//Created by white soapstone
 	event.create('soapstone_mark', block => {
 		block.displayName('Summon Sign')
-		block.defaultCutout()
-		//block.opaque(false)
+		block.opaque(false)
 		block.box(0, 0, 0, 16, 1, 16, true)
-		//block.renderType('cutout')
+		block.renderType('cutout')
 		block.noItem()
-		block.fullBlock(false)
-		//block.noCollision()
+		block.noDrops()
+		block.noCollision()
+
 	})
 })
 
@@ -74,6 +78,3 @@ onEvent('fluid.registry', event => {
 		fluid.displayName('Tree Sap')
 	})
 })
-
-
-console.info('all things loaded successfully?')
