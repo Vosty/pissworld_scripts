@@ -22,6 +22,9 @@ onEvent('item.registry', event => {
 	event.create('white_soapstone', item => {
 		item.displayName('White Sign Soapstone')
 		item.maxDamage(100.0)
+		item.unstackable()
+		item.tooltip('Summons players from another world to assist you')
+
 	})
 	event.create('cracked_redeye_orb', item=> {
 		item.displayName('Cracked Red-Eye Orb')
@@ -31,9 +34,11 @@ onEvent('item.registry', event => {
 	})*/
 	event.create('black_separation_crystal', item => {
 		item.displayName('Black Separation Crystal')
+		item.tooltip('Use to go home from another world')
 	})
-	even.create('homeward_bone', item => {
+	event.create('homeward_bone', item => {
 		item.displayName('Homeward Bone')
+		item.tooltip('Returns you to your bed')
 	})
 
 })
@@ -60,13 +65,11 @@ onEvent('block.registry', event => {
 	//Created by white soapstone
 	event.create('soapstone_mark', block => {
 		block.displayName('Summon Sign')
-		block.opaque(false)
+		block.defaultCutout()
 		block.box(0, 0, 0, 16, 1, 16, true)
-		block.renderType('cutout')
 		block.noItem()
 		block.noDrops()
-		block.noCollision()
-
+		block.fullBlock(false)
 	})
 })
 
@@ -78,3 +81,5 @@ onEvent('fluid.registry', event => {
 		fluid.displayName('Tree Sap')
 	})
 })
+
+console.info('all things loaded successfully?')

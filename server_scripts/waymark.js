@@ -204,7 +204,7 @@ onEvent('item.right_click', event => {
 
 
 onEvent('player.chat', function (event) {
-    if (!event.message.startsWith(COMMAND_PREFIX)|| event.world.side !== "SERVER") {
+    if (!event.message.startsWith(COMMAND_PREFIX) || event.world.side !== "SERVER") {
   		return
   	}
 
@@ -335,7 +335,6 @@ onEvent('block.right_click', event => {
 		return
 	}
 
-	//WHITE SOAPSTONE
 	let block = event.block
 	if (event.hand == MAIN_HAND && (block.id === 'kubejs:waymark_core' || block.id ==='kubejs:waymark_private_core')) {
 		let waymark = getWayMarkByPos(event, world.dimension, block.x, block.y, block.z)
