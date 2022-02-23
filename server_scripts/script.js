@@ -214,10 +214,10 @@ onEvent('item.right_click', event => {
 		} else {
 			player.getOffHandItem().count--
 		}
-		event.server.scheduleInTicks(BLACK_SEPARATION_CRYSTAL_TIME_IN_TICKS, function(callback)) {
+		event.server.scheduleInTicks(BLACK_SEPARATION_CRYSTAL_TIME_IN_TICKS, function(callback) {
 			callback.server.runCommandSilent(`/execute in ${data.dimension} run tp ${player} ${data.x} ${data.y} ${data.z}`)
 
-		}
+		})
 		return
 	}
 

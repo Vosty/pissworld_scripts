@@ -1,4 +1,4 @@
-const COMMAND_PREFIX = '!'
+//const COMMAND_PREFIX = '!'  //  Declared in main file
 
 const WAYMARK_WARP_COMMAND = 'waywarp'
 const WAYMARK_WARP_COMMAND_ALIAS = 'ww'
@@ -17,7 +17,7 @@ const WAYMARK_MIN_PROXIMITY_DISTANCE = 15.0
 const WAYMARK_SAFESPOT_SCAN_DISTANCE = 10.0
 
 
-const PI = 3.141592653
+//const PI = 3.141592653 //  Declared in main file
 
 
 
@@ -27,13 +27,17 @@ let getWaymarkByName= function(event, name) {
 		return
 	}
 	waymarks = event.server.persistentData.waymarks
+	let target = null
 	waymarks.forEach(wm => {
 		if (name === wm.markName) {
-			return wm
+			target = wm
 		}
 	})
-	console.info(`No waymark found with name: ${name}`)
-	return null
+
+	if (!target) {
+		console.info(`No waymark found with name: ${name}`)
+	}
+	return target
 }
 
 let getWayMarkByPos = function(event, dimension, x, y, z) {
@@ -41,14 +45,18 @@ let getWayMarkByPos = function(event, dimension, x, y, z) {
 		console.info('Uh oh! No waymark data found')
 		return
 	}
+	console.info(`Looking for waymark in ${dimension} with coordinates ${x} ${y} ${z}`)
 	waymarks = event.server.persistentData.waymarks
+	let target = null
 	waymarks.forEach(wm => {
-		if (dimension === wm.dimension && x == wm.x && y == wm.y && z == wm.z) {
-			return wm
+		if (dimension === wm.dimension && x == wm.x && y== wm.y && z == wm.z) {
+			target = wm
 		}
 	})
-	console.info(`No waymark found with pos ${dimension} ${x} ${y} ${z}`)
-	return null
+	if (!target) {
+		console.info(`No waymark found with pos ${dimension} ${x} ${y} ${z}`)
+	}
+	return target
 }
 
 // Kind of obnoxious on purpose, to encourage players to rename their damn waymarks
@@ -86,28 +94,31 @@ let waymarkProximityCheck = function(event, player) {
 		return
 	}
 	waymarks = event.server.persistentData.waymarks
+	let target = false
 	waymarks.forEach(wm => {
-		if (dimension === wm.dimension) {
+		if (event.world.dimension === wm.dimension) {
 			let dx = wm.x - player.x
 			let dy = wm.y - player.y
 			let dz = wm.z - player.z
 			let dist = Math.sqrt(Math.pow(dx,2) + Math.pow(dy,2) + Math.pow(dz,2))
-			if (dist <= WAYMARK_MIN_PROXIMITY_DISTANCE) {return true}
+			if (dist <= WAYMARK_MIN_PROXIMITY_DISTANCE) {target = true}
 		}
 	})
+	if (!target) {
 	console.info(`No waymark found in range of ${player}`)
-	return false
+	}
+	return target
 }
 
 // Checks the a spot as well above and below for a good 'landing zone'
 // May need to add checks that this doesn't place into lava
 let safetyCheck = function(world, posX, posY, posZ) {
 	let block = world.getBlock(posX, posY, posZ)
-		if (block === 'minecraft:air' && block.up === 'minecraft:air' && block.down !== 'minecraft:air') {
+		if (block && block === 'minecraft:air' && block.up === 'minecraft:air' && block.down !== 'minecraft:air') {
 			result = {
-				x : posX
-				y : posY
-				z : posZ
+				x : posX,
+				y : posY,
+				z : posZ,
 			}
 			return result
 		}
@@ -118,45 +129,58 @@ let safetyCheck = function(world, posX, posY, posZ) {
 // This shape was chosen as avoids the goofy scenario of putting people directly on top of the waymark
 // even when there are lots of more reasonable spots nearby
 let getNearbySafeSpot = function(event, dimension, posX, posY, posZ) {
-	let world = event.server.getWorld(dimension)
+	//let world = event.server.getLevel(dimension) <= Currently bugged :)
+	let allWorlds = event.server.worlds
+	let world
+	allWorlds.forEach(wld => {
+		if (dimension === wld.dimension) {
+			world = wld
+		}
+	})
 	if (!world) {
 		console.info(`World ${dimension} not found!`)
 		return null
 	}
+	console.info('Not null!')
 	let safeX, safeY, safeZ
-	let randomAngle = Math.random * PI * 2.0 //Random Angle to start scan
+	let randomAngle = Math.random() * PI * 2.0 //Random Angle to start scan
 
 	// Scan in expanding circle around X and Z axii
 	for (let dist = 1.0; dist <= WAYMARK_SAFESPOT_SCAN_DISTANCE; dist++) {
-		for (let angle = randomAngle; angle < PI * 2 + randomAngle; angle += 2 * PI / 16) { // May require more PI slices
+		console.info('loop one')
+		for (let angle = randomAngle; angle < PI * 2 + randomAngle; angle += 2 * PI / 32) { // May require more PI slices
+			console.info('loop two')
 			// Scan slowly farther away for Y axis, starting from the center
 			// A little messy but preferable to up / down scan
 			for (let dy = 0.0; dy < dist + 1.0; dy++) { //The + 1 is a little magic to give the y axis most preferential treatment
-				safeX = dist * Math.cos(angle) + posX
-				safeZ = dist * Math.sin(angle) + posZ
+				console.info('loop three')
+				safeX = Math.round(dist * Math.cos(angle) + posX)
+				safeZ = Math.round(dist * Math.sin(angle) + posZ)
 
 				safeY = posY + dy
-				let isSafeYPlus = safetyCheck(safeX, safeY, safeZ) // Result obj if safe, false if not safe
+				console.info('DEEPER')
+				let isSafeYPlus = safetyCheck(world, safeX, safeY, safeZ) // Result obj if safe, false if not safe
 				if (isSafeYPlus) { return isSafeYPlus }
 				safeY = posY - dy
-				let isSafeYMinus = safetyCheck(safeX, safeY, safeZ)
+				let isSafeYMinus = safetyCheck(world, safeX, safeY, safeZ)
 				if (isSafeYMinus) { return isSafeYMinus }	
 			}
 		}
 	}
+	console.info('NULL')
 	return null
 }
 
 
 /// WAYMARK CREATION
 onEvent('item.right_click', event => {
-	const world = event.getWorld()
+	let world = event.getWorld()
 
 	if(world.side !== "SERVER") {
 		return
 	}
 
-	const item = event.getItem()
+	let item = event.getItem()
 
 	if (item.id === WAYMARK_ACTIVATOR_WAND_ID) {
 		//waymark logic here
@@ -166,9 +190,10 @@ onEvent('item.right_click', event => {
 			let below = lookingAt.block.down;
 			let belowBelow = below.down;
 			if (below && belowBelow && below == WAYMARK_BASE_BLOCK_ID && belowBelow == WAYMARK_BASE_BLOCK_ID) {
-				let publicWaymark = lookingAt.block == WAYMARK_PUBLIC_BLOCK_ID
+				let publicWaymark = (lookingAt.block == WAYMARK_PUBLIC_BLOCK_ID)
 				let setBlock = publicWaymark ? 'kubejs:waymark_core' : 'kubejs:waymark_private_core'
 				lookingAt.block.set(setBlock)
+				let playername = player.toString()
 
 				let markData = NBT.compoundTag()
 				markData.x = lookingAt.block.x
@@ -176,7 +201,7 @@ onEvent('item.right_click', event => {
 				markData.z = lookingAt.block.z
 				markData.dimension = world.dimension
 				markData.public = publicWaymark
-				markData.owner = player.name
+				markData.owner = playername
 				markData.markName = waymarkNameGenerator(markData)
 
 				console.info(markData)
@@ -189,7 +214,8 @@ onEvent('item.right_click', event => {
 
 				console.info(event.server.persistentData.waymarks)
 
-				player.tell(`Waymark ${markData.markName} formed! Use ${COMMAND_PREFIX}${WAYMARK_RENAME_COMMAND} <old name> ${WAYMARK_RENAME_SPLIT_DELIMITER} <new name> to rename this waymark`)
+				player.tell(`Waymark ${markData.markName} formed! `)
+				player.tell(`Use ${COMMAND_PREFIX}${WAYMARK_RENAME_COMMAND} <old name> ${WAYMARK_RENAME_SPLIT_DELIMITER} <new name> to rename this waymark`)
 				if (publicWaymark) {
 					player.tell(`This waymark is public, and will appear with command ${COMMAND_PREFIX}${WAYMARK_LIST_COMMAND}`)
 					player.tell('Double check that you want players to see this waymark.')
@@ -200,7 +226,7 @@ onEvent('item.right_click', event => {
 			} 
 		}
 	}
-}
+})
 
 
 onEvent('player.chat', function (event) {
@@ -212,11 +238,10 @@ onEvent('player.chat', function (event) {
 
   	if(message.startsWith(COMMAND_PREFIX + WAYMARK_WARP_COMMAND) || message.startsWith(COMMAND_PREFIX + WAYMARK_WARP_COMMAND_ALIAS)) {
   		let goal = message.substring(message.indexOf(' ') + 1)
-  		
-  		if (goal && goal.length > 0) {
+  		if (goal && goal.length() > 0) {
   			let waymark = getWaymarkByName(event, goal)
   			if (waymark) {
-  				if (waymarkProximityCheck(event)) {
+  				if (waymarkProximityCheck(event, event.player)) {
   					let safeSpot = getNearbySafeSpot(event, waymark.dimension, waymark.x, waymark.y, waymark.z)
   					if (safeSpot) {
   						event.server.runCommandSilent(`/execute in ${waymark.dimension} run tp ${event.player} ${safeSpot.x} ${safeSpot.y} ${safeSpot.z}`)
@@ -237,7 +262,7 @@ onEvent('player.chat', function (event) {
   	}
 
 
-  	if(mesage.startsWith(COMMAND_PREFIX + WAYMARK_LIST_COMMAND)) {
+  	if(message.startsWith(COMMAND_PREFIX + WAYMARK_LIST_COMMAND)) {
 	  	if (!event.server.persistentData || !event.server.persistentData.waymarks) {
 			console.info('Uh oh! No waymark data found')
 			event.player.tell('No waymark data found')
@@ -251,7 +276,7 @@ onEvent('player.chat', function (event) {
 				wmList.append(Text.of(wm.markName).yellow())
 				wmList.append('  ') //TODO: Get better formatting than this
 			} else if (wm.owner === event.player.name) {
-				wm.list.append(Text.of(wm.markName).gray().italic())
+				wmList.append(Text.of(wm.markName).gray().italic())
 				wmList.append('  ')
 
 			}
@@ -266,8 +291,8 @@ onEvent('player.chat', function (event) {
 		message = message.substring(message.indexOf(' ') + 1)
 		let split = message.split(`${WAYMARK_RENAME_SPLIT_DELIMITER}`)
 		if (split.length == 2 ) {
-			let oldName == split[0].trim()
-			let newName == split[1].trim()
+			let oldName = split[0].trim()
+			let newName = split[1].trim()
 			let wm = getWaymarkByName(event, oldName)
 			if (wm == null) {
 				event.player.tell(`No waymark found with name ${oldName}`)
@@ -285,7 +310,7 @@ onEvent('player.chat', function (event) {
 				event.cancel()
 				return
 			}
-			for (let i = 0; i < event.server.persistentData.waymarks.length) {
+			for (let i = 0; i < event.server.persistentData.waymarks.length; i++) {
 				if (wm == event.server.persistentData.waymarks.get(i)) {
 					// Delete old entry, add copy of entry into old position (keeps list consistent)
 					event.server.persistentData.waymarks.remove(i)
@@ -301,7 +326,7 @@ onEvent('player.chat', function (event) {
 		event.cancel()
 		return
   	}
-}
+})
 
 
 onEvent('block.break', function (event) {
@@ -325,7 +350,7 @@ onEvent('block.break', function (event) {
 		event.player.tell('Destroyed a waymark core with no registered position.')
 		event.player.tell('....What did you do?')
 	}
-}
+})
 
 onEvent('block.right_click', event => {
 	let world = event.world
@@ -340,5 +365,6 @@ onEvent('block.right_click', event => {
 		let waymark = getWayMarkByPos(event, world.dimension, block.x, block.y, block.z)
 		if (waymark) { player.tell(`Waymark Name: ${waymark.markName}    Owner: ${waymark.owner}`) }
 		player.tell(`Use ${COMMAND_PREFIX}${WAYMARK_WARP_COMMAND} <waymark name> or ${COMMAND_PREFIX}${WAYMARK_WARP_COMMAND_ALIAS} <waymark name> to warp`)
+		event.cancel()
 	}
-}
+})
