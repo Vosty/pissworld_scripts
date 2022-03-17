@@ -38,6 +38,19 @@ let getOtherPlayers = function(event) {
 }
 
 
+let alloy = function(event, inputs, resultFluid, amount, temperature ) {
+	event.custom({
+		"type": "tconstruct:alloy",
+		"inputs": inputs, // [{ 'name':'XXXXX', 'amount': 0000 },...]
+		"result": {
+			"fluid": resultFluid,
+			"amount": amount
+		},
+		"temperature": temperature
+	})
+}
+
+
 
 console.info('Hello, World! (You will see this line every time server resources reload)')
 ///
@@ -64,8 +77,49 @@ onEvent('recipes', event => {
 
 
 	/// Co-op Items (Dark Souls)
-	//TODO:
-	//event.shapeasdfed()
+	event.shapeless('1x kubejs:white_soapstone', ['1x minecraft:bone_meal', '1x kubejs:otherworld_shard'])
+	event.shapeless('1x kubejs:homeward_bone', ['1x minecraft:bone', '1x kubejs:otherworld_shard'])
+	event.shaped('1x kubejs:cracked_redeye_orb', [
+		'SSS',
+		'SAS',
+		'SSS'
+		], {
+			S: 'kubejs:otherworld_shard',
+			A: 'minecraft:ender_pearl'
+		})
+
+	/// Beer
+
+	event.recipes.create.milling('kubejs:cereal', ['minecraft:wheat'])
+	event.recipes.create.mixing('kubejs:steeped_malt', [
+		'kubejs:cereal',
+		Fluid.of('minecraft:water', 250)
+	])
+	event.recipes.create.splashing('kubejs:green_malt', ['kubejs:steeped_malt'])
+	event.smelting('1x kubejs:dried_malt', '1x kubejs:green_malt')
+	event.recipes.create.mixing('kubejs:mashed_wort', [
+		Item.of('kubejs:dried_malt', 3),
+		Fluid.of('minecraft:water', 1000)
+	]).processingTime(200).heated()
+	event.recipes.create.emptying([Fluid.of('kubejs:sweet_wort', 750), 'kubejs:drained_wort'], 'kubejs:mashed_wort')
+	event.recipes.create.filling('kubejs:sparged_wort', ['kubejs:drained_wort', Fluid.of('minecraft:water', 500)])
+	event.recipes.create.emptying([Fluid.of('kubejs:sweet_wort', 250), 'kubejs:spent_wort'], 'kubejs:sparged_wort')
+	event.recipes.create.mixing(Fluid.of('kubejs:hopped_wort',1000), [
+		Item.of('minecraft:sugar', 3),
+		Fluid.of('kubejs:sweet_wort', 1000)
+	]).processingTime(100).heated()
+	event.recipes.create.mixing(Fluid.of('kubejs:hopped_wort', 1000), [
+		Item.of('minecraft:sugar', 3),
+		Fluid.of('kubejs:sweet_wort', 1000),
+	]).processingTime(100).heated()
+	event.recipes.create.mixing(Fluid.of('kubejs:yeast_water', 500), [
+		Fluid.of('kubejs:yeast_water', 250),
+		Fluid.of('minecraft:water', 250)
+	]).processingTime(100).heated()
+	alloy(event, [
+		{ 'name': 'kubejs:yeast_water', 'amount': 100},
+		{ 'name': 'kubejs:hopped_wort', 'amount': 1000}], 'kubejs:beer', 1000, 200)
+	event.recipes.create.filling('kubejs:beer_bottle', ['minecraft:glass_bottle', Fluid.of('kubejs:beer', 333)])
 
 })
 
