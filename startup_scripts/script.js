@@ -36,6 +36,9 @@ onEvent('item.registry', event => {
 	event.create('sparged_wort', item => {
 		item.displayName('Sparged Wort')
 	})
+	event.create('spent_wort', item => {
+		item.displayName('Spent Wort')
+	})
 	event.create('yeast', item => {
 		item.displayName('Yeast')
 	})

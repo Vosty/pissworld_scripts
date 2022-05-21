@@ -116,9 +116,13 @@ onEvent('recipes', event => {
 		Fluid.of('kubejs:yeast_water', 250),
 		Fluid.of('minecraft:water', 250)
 	]).processingTime(100).heated()
+	event.recipes.create.mixing(Fluid.of('kubejs:yeast_water', 250), [
+		Item.of('kubejs:yeast', 1),
+		Fluid.of('minecraft:water', 250)
+	]).processingTime(50).heated()
 	alloy(event, [
 		{ 'name': 'kubejs:yeast_water', 'amount': 100},
-		{ 'name': 'kubejs:hopped_wort', 'amount': 1000}], 'kubejs:beer', 1000, 200)
+		{ 'name': 'kubejs:hopped_wort', 'amount': 1000}], 'kubejs:beer', 1000, 1000)
 	event.recipes.create.filling('kubejs:beer_bottle', ['minecraft:glass_bottle', Fluid.of('kubejs:beer', 333)])
 
 })
