@@ -10,7 +10,7 @@ const WAYMARK_PUBLIC_BLOCK_ID = 'minecraft:gold_block'
 const WAYMARK_PRIVATE_BLOCK_ID = 'minecraft:iron_block'
 const WAYMARK_BASE_BLOCK_ID = 'minecraft:glass'
 
-const WAYMARK_ACTIVATOR_WAND_ID = 'minecraft:stick'
+const WAYMARK_ACTIVATOR_WAND_ID = 'kubejs:otherworld_shard'
 
 const WAYMARK_MIN_PROXIMITY_DISTANCE = 15.0
 
@@ -96,7 +96,7 @@ let waymarkProximityCheck = function(event, player) {
 	waymarks = event.server.persistentData.waymarks
 	let target = false
 	waymarks.forEach(wm => {
-		if (event.world.dimension === wm.dimension) {
+		if (event.level.dimension === wm.dimension) {
 			let dx = wm.x - player.x
 			let dy = wm.y - player.y
 			let dz = wm.z - player.z
@@ -130,7 +130,7 @@ let safetyCheck = function(world, posX, posY, posZ) {
 // even when there are lots of more reasonable spots nearby
 let getNearbySafeSpot = function(event, dimension, posX, posY, posZ) {
 	//let world = event.server.getLevel(dimension) <= Currently bugged :)
-	let allWorlds = event.server.worlds
+	let allWorlds = event.server.allLevels
 	let world
 	allWorlds.forEach(wld => {
 		if (dimension === wld.dimension) {
@@ -174,7 +174,7 @@ let getNearbySafeSpot = function(event, dimension, posX, posY, posZ) {
 
 /// WAYMARK CREATION
 onEvent('item.right_click', event => {
-	let world = event.getWorld()
+	let world = event.getLevel()
 
 	if(world.side !== "SERVER") {
 		return
@@ -230,7 +230,7 @@ onEvent('item.right_click', event => {
 
 
 onEvent('player.chat', function (event) {
-    if (!event.message.startsWith(COMMAND_PREFIX) || event.world.side !== "SERVER") {
+    if (!event.message.startsWith(COMMAND_PREFIX) || event.level.side !== "SERVER") {
   		return
   	}
 
@@ -330,7 +330,7 @@ onEvent('player.chat', function (event) {
 
 
 onEvent('block.break', function (event) {
-	let world = event.world
+	let world = event.level
 
 	if(world.side !== "SERVER") {
 		return
@@ -353,7 +353,7 @@ onEvent('block.break', function (event) {
 })
 
 onEvent('block.right_click', event => {
-	let world = event.world
+	let world = event.level
 	let player = event.player
 
 	if(world.side !== "SERVER") {

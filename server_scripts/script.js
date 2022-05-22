@@ -77,6 +77,7 @@ onEvent('recipes', event => {
 
 
 	/// Co-op Items (Dark Souls)
+	event.shapeless('1x kubejs:otherworld_shard', ['1x minecraft:rotten_flesh', '1x #forge:dyes', '1x #forge:mushrooms'])
 	event.shapeless('1x kubejs:white_soapstone', ['1x minecraft:bone_meal', '1x kubejs:otherworld_shard'])
 	event.shapeless('1x kubejs:homeward_bone', ['1x minecraft:bone', '1x kubejs:otherworld_shard'])
 	event.shaped('1x kubejs:cracked_redeye_orb', [
@@ -90,7 +91,7 @@ onEvent('recipes', event => {
 
 	/// Beer
 
-	event.recipes.create.milling('kubejs:cereal', ['minecraft:wheat'])
+	event.recipes.create.milling('kubejs:cereal', ['corn_delight:corn'])
 	event.recipes.create.mixing('kubejs:steeped_malt', [
 		'kubejs:cereal',
 		Fluid.of('minecraft:water', 250)
@@ -139,7 +140,7 @@ onEvent('item.tags', event => {
 
 /// ITEM / BLOCK INTERACTIONS
 onEvent('item.right_click', event => {
-	let world = event.getWorld()
+	let world = event.getLevel()
 
 	if(world.side !== "SERVER") {
 		return
@@ -188,7 +189,7 @@ onEvent('item.right_click', event => {
 		let rand = Math.round(Math.random() * (worldsToInvade.length-1))
 		console.info(rand)
 		let invaded = worldsToInvade[rand]
-		let invadeWorld = invaded.world
+		let invadeWorld = invaded.level
 		console.info(`${invaded} is being invaded!`)
 		console.info(`${invaded} is at ${invaded.x} ${invaded.y} ${invaded.z} in ${invadeWorld.dimension}`)
 		player.tell('Searching for worlds to invade...')
@@ -229,7 +230,7 @@ onEvent('item.right_click', event => {
 				separation_crystal_pos.x = player.x
 				separation_crystal_pos.y = player.y
 				separation_crystal_pos.z = player.z
-				separation_crystal_dim = player.world.dimension
+				separation_crystal_pos.dim = player.level.dimension
 				player.persistentData.separation_pos = separation_crystal_pos
 
 				console.info(`Teleporting ${player} to ${goodPlaceX} ${goodPlaceY} ${goodPlaceZ} in ${invadeWorld.dimension}`)
@@ -273,7 +274,7 @@ onEvent('item.right_click', event => {
 			player.getOffHandItem().count--
 		}
 		event.server.scheduleInTicks(BLACK_SEPARATION_CRYSTAL_TIME_IN_TICKS, function(callback) {
-			callback.server.runCommandSilent(`/execute in ${data.dimension} run tp ${player} ${data.x} ${data.y} ${data.z}`)
+			callback.server.runCommandSilent(`/execute in ${data.dim} run tp ${player} ${data.x} ${data.y} ${data.z}`)
 
 		})
 		return
@@ -283,7 +284,7 @@ onEvent('item.right_click', event => {
 
 
 onEvent('block.right_click', event => {
-	let world = event.getWorld()
+	let world = event.getLevel()
 	let player = event.player
 
 	if(world.side !== "SERVER") {
@@ -323,7 +324,7 @@ onEvent('player.chat', function (event) {
   	return
   }
 
-  if(event.world.side !== "SERVER") {
+  if(event.level.side !== "SERVER") {
 	return
   }
 
@@ -346,7 +347,7 @@ onEvent('player.chat', function (event) {
 		separation_crystal_pos.x = event.player.x
 		separation_crystal_pos.y = event.player.y
 		separation_crystal_pos.z = event.player.z
-		separation_crystal_dim = event.player.world.dimension
+		separation_crystal_dim = event.player.level.dimension
 		event.player.persistentData.separation_pos = separation_crystal_pos
 
 	    event.server.scheduleInTicks(WHITE_SOAPSTONE_SUMMON_TIME_IN_TICKS, function(callback) {
@@ -366,4 +367,36 @@ onEvent('player.chat', function (event) {
     event.cancel()
     return
   }
+})
+
+
+onEvent('entity.loot_tables', event => {
+let ZOMBIE_SHARD_CHANCE = 0.08
+let SKELETON_SHARD_CHANCE = 0.06
+let CREEPER_SHARD_CHANCE = 0.12
+let ENDERMAN_SHARD_CHANCE = 0.5
+
+	event.modifyEntity('minecraft:zombie', table => {
+		table.addPool(pool => {
+			pool.addItem('kubejs:otherworld_shard').randomChance(ZOMBIE_SHARD_CHANCE)
+		})
+	})
+
+	event.modifyEntity('minecraft:skeleton', table => {
+		table.addPool(pool => {
+			pool.addItem('kubejs:otherworld_shard').randomChance(SKELETON_SHARD_CHANCE)
+		})
+	})
+
+	event.modifyEntity('minecraft:creeper', table => {
+		table.addPool(pool => {
+			pool.addItem('kubejs:otherworld_shard').randomChance(CREEPER_SHARD_CHANCE)
+		})
+	})
+
+	event.modifyEntity('minecraft:enderman', table => {
+		table.addPool(pool => {
+			pool.addItem('kubejs:otherworld_shard').randomChance(ENDERMAN_SHARD_CHANCE)
+		})
+	})
 })
