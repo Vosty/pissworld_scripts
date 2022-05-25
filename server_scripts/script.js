@@ -446,6 +446,24 @@ onEvent('server.load', function(event) {
 })
 
 
+//Drinking beer gives you a bonus ring slot
+onEvent('item.food_eaten', function(event) {
+	if(event.level.side !== "SERVER") {
+			return
+  }
+
+	if (event.item == 'kubejs:beer_bottle') {
+		if (!event.player.stages.has('beer_drank')) {
+	    // Add the stage
+	    event.player.stages.add('beer_drank')
+	    // Give the player a a ring slot
+	    event.server.runCommandSilent(`/curios add ring ${event.player} 1`)
+  	}
+	}
+
+})
+
+
 onEvent('entity.loot_tables', event => {
 let ZOMBIE_SHARD_CHANCE = 0.08
 let SKELETON_SHARD_CHANCE = 0.06
