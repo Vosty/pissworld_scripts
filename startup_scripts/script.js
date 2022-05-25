@@ -12,10 +12,14 @@ onEvent('item.registry', event => {
 	//Rubber
 	event.create('rubber').displayName('Rubber')
 
+	//Player Kill Reward
+	event.create('kill_token').diplayName('Killer Medal')
+	event.create('kill_metal_ingot').displayName('Killer Iron')
+
 	//Beer
 	event.create('cereal').displayName('Cereal')
 	event.create('steeped_malt').displayName('Steeped Malt')
-	event.create('green_malt').displayName('Greet Malt')
+	event.create('green_malt').displayName('Green Malt')
 	event.create('dried_malt').displayName('Dried Malt')
 	event.create('mashed_wort').displayName('Mashed Wort')
 	event.create('drained_wort').displayName('Drained Wort')
@@ -47,6 +51,8 @@ onEvent('block.registry', event => {
 	//Waymark
 	event.create('waymark_core').displayName('Waymark Core').hardness(10.0).noDrops().noItem()
 	event.create('waymark_private_core').displayName('Waymark Core').hardness(10.0).noDrops().noItem()
+
+	event.create('kill_metal_block').displayName('Killer Iron Block').hardness(5.0)
 
 
 	//Created by white soapstone

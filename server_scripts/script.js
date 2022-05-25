@@ -6,7 +6,7 @@ settings.logSkippedRecipes = false
 settings.logErroringRecipes = true
 
 //CONFIGS
-const TEST_MODE = true //Allows players to do things like invade themselves
+const TEST_MODE = false //Allows players to do things like invade themselves
 
 const COMMAND_PREFIX = '!'
 
@@ -20,10 +20,15 @@ const REDEYE_INVSASION_MIN_DISTANCE_FROM_PLAYER = 16
 
 const BLACK_SEPARATION_CRYSTAL_TIME_IN_TICKS = 200
 
+const BOUNTY_HUNT_TIME_IN_TICKS = 72000 // 20tps * 60sec * 60min
+const BOUNTY_REWARD_BASE = 5;
+
 let summon_sign_pos = null
 let summon_sign_dim = null
 let summoner = null
 
+let bountyTarget = null
+let bountyScore = 0;
 
 let PI = 3.141592653
 
@@ -113,6 +118,7 @@ onEvent('recipes', event => {
 		Item.of('minecraft:sugar', 3),
 		Fluid.of('kubejs:sweet_wort', 1000),
 	]).processingTime(100).heated()
+	event.recipes.create.milling('kubejs:yeast', ['#forge:mushrooms'])
 	event.recipes.create.mixing(Fluid.of('kubejs:yeast_water', 500), [
 		Fluid.of('kubejs:yeast_water', 250),
 		Fluid.of('minecraft:water', 250)
@@ -125,6 +131,11 @@ onEvent('recipes', event => {
 		{ 'name': 'kubejs:yeast_water', 'amount': 100},
 		{ 'name': 'kubejs:hopped_wort', 'amount': 1000}], 'kubejs:beer', 1000, 1000)
 	event.recipes.create.filling('kubejs:beer_bottle', ['minecraft:glass_bottle', Fluid.of('kubejs:beer', 333)])
+
+	//Kill metals
+	/*event.smelting('1x kubejs:kill_metal_ingot', '1x kubejs:kill_token')
+	event.shapeless('1x kubejs:kill_metal_block', ['9x kubejs:kill_metal_block'])*/
+
 
 })
 
@@ -230,8 +241,15 @@ onEvent('item.right_click', event => {
 				separation_crystal_pos.x = player.x
 				separation_crystal_pos.y = player.y
 				separation_crystal_pos.z = player.z
-				separation_crystal_pos.dim = player.level.dimension
+				separation_crystal_pos.dimension = player.level.dimension
 				player.persistentData.separation_pos = separation_crystal_pos
+
+
+				//Set a target & reward
+				let cracked_red_target = NBT.compoundTag()
+				cracked_red_target.name = invaded.name
+				cracked_red_target.timeStamp = world.time //Not any use right now but may add later
+				player.persistentData.cracked_red_target = cracked_red_target
 
 				console.info(`Teleporting ${player} to ${goodPlaceX} ${goodPlaceY} ${goodPlaceZ} in ${invadeWorld.dimension}`)
 				event.server.runCommandSilent(`/execute in ${invadeWorld.dimension} run tp ${player} ${goodPlaceX} ${goodPlaceY} ${goodPlaceZ}`)
@@ -274,7 +292,7 @@ onEvent('item.right_click', event => {
 			player.getOffHandItem().count--
 		}
 		event.server.scheduleInTicks(BLACK_SEPARATION_CRYSTAL_TIME_IN_TICKS, function(callback) {
-			callback.server.runCommandSilent(`/execute in ${data.dim} run tp ${player} ${data.x} ${data.y} ${data.z}`)
+			callback.server.runCommandSilent(`/execute in ${data.dimension} run tp ${player} ${data.x} ${data.y} ${data.z}`)
 
 		})
 		return
@@ -343,11 +361,11 @@ onEvent('player.chat', function (event) {
 	    //event.player.paint({soapstone_summon: {type: 'rectangle', texture: 'kubejs:screen/white_particles.png', x:0, y:0, w:'$screenW', h:'$screenH'}})
 	    console.info(`${event.player} has been summoned to world of ${summoner}`)
 
-	    let separation_crystal_pos = NBT.compoundTag()
+	  let separation_crystal_pos = NBT.compoundTag()
 		separation_crystal_pos.x = event.player.x
 		separation_crystal_pos.y = event.player.y
 		separation_crystal_pos.z = event.player.z
-		separation_crystal_dim = event.player.level.dimension
+		separation_crystal_pos.dimension = event.player.level.dimension
 		event.player.persistentData.separation_pos = separation_crystal_pos
 
 	    event.server.scheduleInTicks(WHITE_SOAPSTONE_SUMMON_TIME_IN_TICKS, function(callback) {
@@ -367,6 +385,64 @@ onEvent('player.chat', function (event) {
     event.cancel()
     return
   }
+})
+
+//Currently for Red-Eye Targets & Bounty
+onEvent('entity.death', function(event) {
+	if(event.level.side !== "SERVER") {
+			return
+  }
+
+  deadEntity = event.entity;
+  if (!deadEntity.isPlayer()) {
+  	return
+  }
+  damageSource = event.damageSource;
+  damagePlayer = damageSource.player;
+  if (damagePlayer && damagePlayer.persistentData && damagePlayer.persistentData.cracked_red_target) {
+  		if (deadEntity.name.equals(damagePlayer.persistentData.cracked_red_target.name)) {
+  			//Mission accomplished
+  			damagePlayer.tell('Invasion Successful! Granting reward...')
+  			event.server.runCommandSilent(`/give ${damagePlayer.name} minecraft:player_head{SkullOwner:"${deadEntity.name}"}`)
+  			//TODO event.server.runCommandSilent(`/give ${damagePlayer.name} kubejs:kill_token`)
+  			damagePlayer.persistentData.cracked_red_target = null;
+  			 // Keeping this as a stat. Might do something with this later...
+  			if (!damagePlayer.persistentData.red_kill_score) {
+  				damagePlayer.persistentData.red_kill_score = 0
+  			}
+  			damagePlayer.persistentData.red_kill_score = damagePlayer.persistentData.red_kill_score + 1;
+  		}
+  }
+  if (damagePlayer && bountyTarget && deadEntity.name.equals(bountyTarget)) {
+  			//Mission accomplished
+  			event.server.tell(`${damagePlayer.name} has claimed the bounty on ${bountyTarget}`)
+  			//TODO event.server.runCommandSilent(`/give ${damagePlayer.name} kubejs:kill_token ${bountyScore}`)
+  			bountyTarget = null
+  }
+})
+
+
+onEvent('server.load', function(event) {
+	event.server.scheduleInTicks(BOUNTY_HUNT_TIME_IN_TICKS, function(callback) {
+		let allPlayers = callback.server.players
+		if (allPlayers.length == 0) {
+			callback.server.tell('No players online')
+			return
+		}
+		let rand = Math.round(Math.random() * (allPlayers.length-1))
+		console.info(rand)
+		let bountyPlayer = allPlayers[rand]
+		callback.server.tell(`${bountyPlayer} is now the bounty target!`)
+		let rewardPoints = BOUNTY_REWARD_BASE
+		if (bountyPlayer.persistentData.red_kill_score) {
+				rewardPoints += Math.round(Math.sqrt(bountyPlayer.persistentData.red_kill_score))
+		}
+		callback.server.tell(`${bountyPlayer} is at ${bountyPlayer.x} ${bountyPlayer.y} ${bountyPlayer.z} in ${bountyPlayer.level.dimension}`)
+		callback.server.tell(`The reward is ${rewardPoints} medals!`)
+		bountyTarget = bountyPlayer.name
+		bountyScore = rewardPoints
+		callback.reschedule()
+	})
 })
 
 
