@@ -141,24 +141,24 @@ let getNearbySafeSpot = function(event, dimension, posX, posY, posZ) {
 		console.info(`World ${dimension} not found!`)
 		return null
 	}
-	console.info('Not null!')
+	//console.info('Not null!')
 	let safeX, safeY, safeZ
 	let randomAngle = Math.random() * PI * 2.0 //Random Angle to start scan
 
 	// Scan in expanding circle around X and Z axii
 	for (let dist = 1.0; dist <= WAYMARK_SAFESPOT_SCAN_DISTANCE; dist++) {
-		console.info('loop one')
+		//console.info('loop one')
 		for (let angle = randomAngle; angle < PI * 2 + randomAngle; angle += 2 * PI / 32) { // May require more PI slices
-			console.info('loop two')
+			//console.info('loop two')
 			// Scan slowly farther away for Y axis, starting from the center
 			// A little messy but preferable to up / down scan
 			for (let dy = 0.0; dy < dist + 1.0; dy++) { //The + 1 is a little magic to give the y axis most preferential treatment
-				console.info('loop three')
+				//console.info('loop three')
 				safeX = Math.round(dist * Math.cos(angle) + posX)
 				safeZ = Math.round(dist * Math.sin(angle) + posZ)
 
 				safeY = posY + dy
-				console.info('DEEPER')
+				//console.info('DEEPER')
 				let isSafeYPlus = safetyCheck(world, safeX, safeY, safeZ) // Result obj if safe, false if not safe
 				if (isSafeYPlus) { return isSafeYPlus }
 				safeY = posY - dy

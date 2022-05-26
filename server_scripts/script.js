@@ -457,7 +457,7 @@ onEvent('item.food_eaten', function(event) {
 	    // Add the stage
 	    event.player.stages.add('beer_drank')
 	    // Give the player a a ring slot
-	    event.player.tell('As you drink your first beer, you feel yourself someone more in tune with the world and its magic')
+	    event.player.tell('As you drink your first beer, you feel yourself somewhat more in tune with the world and its magic')
 	    event.player.tell('You can now handle wearing one additional ring')
 	    event.server.runCommandSilent(`/curios add ring ${event.player} 1`)
   	}
