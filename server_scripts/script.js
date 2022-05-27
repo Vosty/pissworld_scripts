@@ -56,6 +56,16 @@ let alloy = function(event, inputs, resultFluid, amount, temperature ) {
 }
 
 
+let cuttingBoard = function(event, input, tool, results) {
+	event.custom({
+		"type": "farmersdelight:cutting",
+		"ingredients": [{ "item": input }],
+		"tool": tool, // {"tag": "forge:tools/knives"}
+		"result": results // [{"item":"minecraft:beetroot_seeds", "chance": 0.5}]
+	})
+}
+
+
 
 console.info('Hello, World! (You will see this line every time server resources reload)')
 ///
@@ -76,7 +86,9 @@ onEvent('recipes', event => {
 		Fluid.of('kubejs:tree_sap', 250)
 		])
 
-	//Rubber into belts
+	//Rubber into all create stuff
+	event.replaceInput({mod: 'create'}, 'minecraft:dried_kelp', 'kubejs:rubber')
+	event.shapeless('1x kubejs:rubber', ['1x minecraft:dried_kelp'])
 	event.shapeless('4x create:belt_connector', ['4x kubejs:rubber'])
 
 
@@ -96,7 +108,7 @@ onEvent('recipes', event => {
 
 	/// Beer
 
-	event.recipes.create.milling('kubejs:cereal', ['corn_delight:corn'])
+	cuttingBoard(event, 'minecraft:wheat', {"tag": "forge:tools/knives"}, [{"item":"kubejs:cereal"}, {"item":"minecraft:wheat_seeds", "chance": 0.2}])
 	event.recipes.create.mixing('kubejs:steeped_malt', [
 		'kubejs:cereal',
 		Fluid.of('minecraft:water', 250)
@@ -133,8 +145,8 @@ onEvent('recipes', event => {
 	event.recipes.create.filling('kubejs:beer_bottle', ['minecraft:glass_bottle', Fluid.of('kubejs:beer', 333)])
 
 	//Kill metals
-	/*event.smelting('1x kubejs:kill_metal_ingot', '1x kubejs:kill_token')
-	event.shapeless('1x kubejs:kill_metal_block', ['9x kubejs:kill_metal_block'])*/
+	event.smelting('1x kubejs:kill_metal_ingot', '1x kubejs:kill_token')
+	event.shapeless('1x kubejs:kill_metal_block', ['9x kubejs:kill_metal_block'])
 
 
 })
@@ -179,7 +191,7 @@ onEvent('item.right_click', event => {
 		let player = event.getPlayer()
 		let spawnpoint = player.getSpawnLocation()
 		let hand = event.hand
-		event.server.runCommandSilent(`/execute in ${spawnpoint.dimension} run tp ${player} ${spawnpoint.x} ${spawnpoint.y} ${spawnpoint.z}`)
+		event.server.runCommandSilent(`/execute in minecraft:overworld run tp ${player} ${spawnpoint.x} ${spawnpoint.y} ${spawnpoint.z}`)
 		if (hand == MAIN_HAND) {
 			player.getMainHandItem().count--
 		} else {
@@ -404,7 +416,7 @@ onEvent('entity.death', function(event) {
   			//Mission accomplished
   			damagePlayer.tell('Invasion Successful! Granting reward...')
   			event.server.runCommandSilent(`/give ${damagePlayer.name} minecraft:player_head{SkullOwner:"${deadEntity.name}"}`)
-  			//TODO event.server.runCommandSilent(`/give ${damagePlayer.name} kubejs:kill_token`)
+  			event.server.runCommandSilent(`/give ${damagePlayer.name} kubejs:kill_token`)
   			damagePlayer.persistentData.cracked_red_target = null;
   			 // Keeping this as a stat. Might do something with this later...
   			if (!damagePlayer.persistentData.red_kill_score) {
@@ -416,7 +428,7 @@ onEvent('entity.death', function(event) {
   if (damagePlayer && bountyTarget && deadEntity.name.equals(bountyTarget)) {
   			//Mission accomplished
   			event.server.tell(`${damagePlayer.name} has claimed the bounty on ${bountyTarget}`)
-  			//TODO event.server.runCommandSilent(`/give ${damagePlayer.name} kubejs:kill_token ${bountyScore}`)
+  			event.server.runCommandSilent(`/give ${damagePlayer.name} kubejs:kill_token ${bountyScore}`)
   			bountyTarget = null
   }
 })

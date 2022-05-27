@@ -13,8 +13,8 @@ onEvent('item.registry', event => {
 	event.create('rubber').displayName('Rubber')
 
 	//Player Kill Reward
-	event.create('kill_token').diplayName('Killer Medal')
-	event.create('kill_metal_ingot').displayName('Killer Iron')
+	event.create('kill_token').displayName('Heart Clump')
+	event.create('kill_metal_ingot').displayName('Heart Steel')
 
 	//Beer
 	event.create('cereal').displayName('Cereal')
@@ -42,7 +42,7 @@ onEvent('item.registry', event => {
 		item.displayName('Sunlight Medallion')
 	})*/
 	event.create('black_separation_crystal').displayName('Black Separation Crystal').tooltip('Use to go home from another world')
-	event.create('homeward_bone').displayName('Homeward Bone').tooltip('Returns you to your bed')
+	event.create('homeward_bone').displayName('Homeward Bone').tooltip('Returns you to your bed in the overworld')
 })
 
 onEvent('block.registry', event => {
@@ -52,7 +52,7 @@ onEvent('block.registry', event => {
 	event.create('waymark_core').displayName('Waymark Core').hardness(10.0).noDrops().noItem()
 	event.create('waymark_private_core').displayName('Waymark Core').hardness(10.0).noDrops().noItem()
 
-	event.create('kill_metal_block').displayName('Killer Iron Block').hardness(5.0)
+	event.create('kill_metal_block').displayName('Heart Steel Block').hardness(5.0)
 
 
 	//Created by white soapstone

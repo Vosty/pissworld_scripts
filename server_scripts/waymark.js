@@ -245,6 +245,7 @@ onEvent('player.chat', function (event) {
   					let safeSpot = getNearbySafeSpot(event, waymark.dimension, waymark.x, waymark.y, waymark.z)
   					if (safeSpot) {
   						event.server.runCommandSilent(`/execute in ${waymark.dimension} run tp ${event.player} ${safeSpot.x} ${safeSpot.y} ${safeSpot.z}`)
+  						console.info(`${event.player} teleported to waymark ${goal}`)
   					} else {
   						event.player.tell('The waymark appears to be blocked. Try again or clear a space for players to teleport')
   					}
