@@ -129,6 +129,10 @@ onEvent('recipes', event => {
 	event.recipes.create.mixing(Fluid.of('kubejs:hopped_wort', 1000), [
 		Item.of('minecraft:sugar', 3),
 		Fluid.of('kubejs:sweet_wort', 1000),
+	event.recipes.create.mixing(Fluid.of('kubejs:bitter_wort', 1000), [
+		Item.of('farmersrespite:coffee_beans', 2),
+		Item.of('minecraft:sugar', 1),
+		Fluid.of('kubejs:sweet_wort', 1000),
 	]).processingTime(100).heated()
 	event.recipes.create.milling('kubejs:yeast', ['#forge:mushrooms'])
 	event.recipes.create.mixing(Fluid.of('kubejs:yeast_water', 500), [
@@ -143,6 +147,10 @@ onEvent('recipes', event => {
 		{ 'name': 'kubejs:yeast_water', 'amount': 100},
 		{ 'name': 'kubejs:hopped_wort', 'amount': 1000}], 'kubejs:beer', 1000, 1000)
 	event.recipes.create.filling('kubejs:beer_bottle', ['minecraft:glass_bottle', Fluid.of('kubejs:beer', 333)])
+	alloy(event, [
+		{ 'name': 'kubejs:yeast_water', 'amount': 100},
+		{ 'name': 'kubejs:bitter_wort', 'amount': 1000}], 'kubejs:ipa', 1000, 1000)
+	event.recipes.create.filling('kubejs:ipa_bottle', ['minecraft:glass_bottle', Fluid.of('kubejs:ipa', 333)])
 
 	//Kill metals
 	event.smelting('1x kubejs:kill_metal_ingot', '1x kubejs:kill_token')
@@ -439,6 +447,7 @@ onEvent('server.load', function(event) {
 		let allPlayers = callback.server.players
 		if (allPlayers.length == 0) {
 			callback.server.tell('No players online')
+			callback.reschedule()
 			return
 		}
 		let rand = Math.round(Math.random() * (allPlayers.length-1))
@@ -464,7 +473,7 @@ onEvent('item.food_eaten', function(event) {
 			return
   }
 
-	if (event.item == 'kubejs:beer_bottle') {
+	if (event.item == 'kubejs:beer_bottle' || 'kubejs:ipa_bottle') {
 		if (!event.player.stages.has('beer_drank')) {
 	    // Add the stage
 	    event.player.stages.add('beer_drank')

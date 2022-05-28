@@ -347,7 +347,7 @@ onEvent('block.break', function (event) {
 				return
 			}
 		}
-		console.info(`No waymark found with position ${dimension} ${x} ${y} ${z}`)
+		console.info(`No waymark found with position ${world.dimension} ${block.x} ${block.y} ${block.z}`)
 		event.player.tell('Destroyed a waymark core with no registered position.')
 		event.player.tell('....What did you do?')
 	}

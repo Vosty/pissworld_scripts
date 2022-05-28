@@ -31,6 +31,11 @@ onEvent('item.registry', event => {
 		food.saturation(1.05)
 		food.effect('minecraft:nausea', 12, 1, 1.0)
 	})
+	event.create('ipa_bottle').displayName('Bottle of Beer').food(food => {
+		food.hunger(6)
+		food.saturation(1.10)
+		food.effect('minecraft:nausea', 12, 1, 1.0)
+	})
 
 
 	/// Co-op Items (Dark Souls Items)
@@ -63,9 +68,11 @@ onEvent('block.registry', event => {
 onEvent('fluid.registry', event => {
 	event.create('tree_sap').thinTexture(0x875d03).bucketColor(0x875d03).displayName('Tree Sap')
 	event.create('sweet_wort').thinTexture(0x855605).bucketColor(0x855605).displayName('Sweet Wort')
+	event.create('bitter_wort').thinTexture(0x7f8505).bucketColor(0x7f8505).displayName('Bitter Wort')
 	event.create('hopped_wort').thinTexture(0x858105).bucketColor(0x858105).displayName('Hopped Wort')
 	event.create('yeast_water').thinTexture(0xd9d79c).bucketColor(0xd9d79c).displayName('Activating Yeast')
 	event.create('beer').thinTexture(0xe8cb0c).bucketColor(0xe8cb0c).displayName('Beer')
+	event.create('ipa').thinTexture(0xe8dd0c).bucketColor(0xe8dd0c).displayName('IPA')
 })
 
 console.info('all things loaded successfully?')
