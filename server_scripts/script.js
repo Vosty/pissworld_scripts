@@ -37,7 +37,7 @@ let getOtherPlayers = function(event) {
 	let player = event.player
 	let allPlayers = event.server.players
 	let otherPlayers = allPlayers.filter(function(value) {
-			return value.name == player.name || TEST_MODE
+			return value.name != player.name || TEST_MODE
 		})
 	return otherPlayers
 }
@@ -154,17 +154,28 @@ onEvent('recipes', event => {
 
 	//Kill metals
 	event.smelting('1x kubejs:kill_metal_ingot', '1x kubejs:kill_token')
-	event.shapeless('1x kubejs:kill_metal_block', ['9x kubejs:kill_metal_block'])
+	event.shapeless('1x kubejs:kill_metal_block', ['9x kubejs:kill_metal_ingot'])
+	event.shapeless('9x kubejs:kill_metal_ingot', ['1x kubejs:kill_metal_block'])
 
+	// Cheese
+	event.recipes.create.mixing('kubejs:cheese', [
+		Item.of('minecraft:yellow_dye', 1),
+		Fluid.of('minecraft:milk', 1000)
+	]).processingTime(100)
+	event.shapeless('1x kubejs:cheese_block', ['4x kubejs:cheese'])
+	event.shapeless('4x kubejs:cheese', ['1x kubejs:cheese_block'])
 
 })
 
 onEvent('item.tags', event => {
-	// Get the #forge:cobblestone tag collection and add Diamond Ore to it
-	// event.get('forge:cobblestone').add('minecraft:diamond_ore')
-
-	// Get the #forge:cobblestone tag collection and remove Mossy Cobblestone from it
-	// event.get('forge:cobblestone').remove('minecraft:mossy_cobblestone')
+	// Lets t-con knives and aquaculture knives work on the cutting board (maybe?)
+	event.get('farmersdelight:tools/knives').add('tconstruct:dagger')
+	event.get('farmersdelight:tools/knives').add('aquaculture:wooden_fillet_knife')
+	event.get('farmersdelight:tools/knives').add('aquaculture:stone_fillet_knife')
+	event.get('farmersdelight:tools/knives').add('aquaculture:iron_fillet_knife')
+	event.get('farmersdelight:tools/knives').add('aquaculture:gold_fillet_knife')
+	event.get('farmersdelight:tools/knives').add('aquaculture:diamond_fillet_knife')
+	event.get('farmersdelight:tools/knives').add('aquaculture:neptunium_fillet_knife')
 })
 
 
@@ -417,8 +428,11 @@ onEvent('entity.death', function(event) {
   if (!deadEntity.isPlayer()) {
   	return
   }
-  damageSource = event.damageSource;
-  damagePlayer = damageSource.player;
+  let damageSource = event.source;
+  let damagePlayer = null
+  if (damageSource) {
+  	damagePlayer = damageSource.player;
+  }
   if (damagePlayer && damagePlayer.persistentData && damagePlayer.persistentData.cracked_red_target) {
   		if (deadEntity.name.equals(damagePlayer.persistentData.cracked_red_target.name)) {
   			//Mission accomplished
@@ -499,11 +513,24 @@ let ENDERMAN_SHARD_CHANCE = 0.5
 		})
 	})
 
+	event.modifyEntity('minecraft:zombified_piglin', table => {
+		table.addPool(pool => {
+			pool.addItem('kubejs:otherworld_shard').randomChance(ZOMBIE_SHARD_CHANCE)
+		})
+	})
+
 	event.modifyEntity('minecraft:skeleton', table => {
 		table.addPool(pool => {
 			pool.addItem('kubejs:otherworld_shard').randomChance(SKELETON_SHARD_CHANCE)
 		})
 	})
+
+	event.modifyEntity('minecraft:stray', table => {
+		table.addPool(pool => {
+			pool.addItem('kubejs:otherworld_shard').randomChance(SKELETON_SHARD_CHANCE)
+		})
+	})
+
 
 	event.modifyEntity('minecraft:creeper', table => {
 		table.addPool(pool => {

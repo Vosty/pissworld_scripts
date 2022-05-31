@@ -37,6 +37,11 @@ onEvent('item.registry', event => {
 		food.effect('minecraft:nausea', 12, 1, 1.0)
 	})
 
+	event.create('cheese').displayName('Cheese').food(food => {
+		food.hunger(5)
+		food.saturation(1.00)
+	})
+
 
 	/// Co-op Items (Dark Souls Items)
 	// TODO: Tooltips
@@ -58,6 +63,8 @@ onEvent('block.registry', event => {
 	event.create('waymark_private_core').displayName('Waymark Core').hardness(10.0).noDrops().noItem()
 
 	event.create('kill_metal_block').displayName('Heart Steel Block').hardness(5.0)
+
+	event.create('cheese_block').displayName('Cheese Block').hardness(2.0)
 
 
 	//Created by white soapstone
