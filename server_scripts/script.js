@@ -128,11 +128,12 @@ onEvent('recipes', event => {
 	]).processingTime(100).heated()
 	event.recipes.create.mixing(Fluid.of('kubejs:hopped_wort', 1000), [
 		Item.of('minecraft:sugar', 3),
-		Fluid.of('kubejs:sweet_wort', 1000),
+		Fluid.of('kubejs:sweet_wort', 1000)
+	]).processingTime(100).heated()
 	event.recipes.create.mixing(Fluid.of('kubejs:bitter_wort', 1000), [
 		Item.of('farmersrespite:coffee_beans', 2),
 		Item.of('minecraft:sugar', 1),
-		Fluid.of('kubejs:sweet_wort', 1000),
+		Fluid.of('kubejs:sweet_wort', 1000)
 	]).processingTime(100).heated()
 	event.recipes.create.milling('kubejs:yeast', ['#forge:mushrooms'])
 	event.recipes.create.mixing(Fluid.of('kubejs:yeast_water', 500), [
@@ -169,13 +170,13 @@ onEvent('recipes', event => {
 
 onEvent('item.tags', event => {
 	// Lets t-con knives and aquaculture knives work on the cutting board (maybe?)
-	event.get('farmersdelight:tools/knives').add('tconstruct:dagger')
-	event.get('farmersdelight:tools/knives').add('aquaculture:wooden_fillet_knife')
-	event.get('farmersdelight:tools/knives').add('aquaculture:stone_fillet_knife')
-	event.get('farmersdelight:tools/knives').add('aquaculture:iron_fillet_knife')
-	event.get('farmersdelight:tools/knives').add('aquaculture:gold_fillet_knife')
-	event.get('farmersdelight:tools/knives').add('aquaculture:diamond_fillet_knife')
-	event.get('farmersdelight:tools/knives').add('aquaculture:neptunium_fillet_knife')
+	event.get('forge:tools/knives').add('tconstruct:dagger')
+	event.get('forge:tools/knives').add('aquaculture:wooden_fillet_knife')
+	event.get('forge:tools/knives').add('aquaculture:stone_fillet_knife')
+	event.get('forge:tools/knives').add('aquaculture:iron_fillet_knife')
+	event.get('forge:tools/knives').add('aquaculture:gold_fillet_knife')
+	event.get('forge:tools/knives').add('aquaculture:diamond_fillet_knife')
+	event.get('forge:tools/knives').add('aquaculture:neptunium_fillet_knife')
 })
 
 

@@ -31,7 +31,7 @@ onEvent('item.registry', event => {
 		food.saturation(1.05)
 		food.effect('minecraft:nausea', 12, 1, 1.0)
 	})
-	event.create('ipa_bottle').displayName('Bottle of Beer').food(food => {
+	event.create('ipa_bottle').displayName('Bottle of IPA').food(food => {
 		food.hunger(6)
 		food.saturation(1.10)
 		food.effect('minecraft:nausea', 12, 1, 1.0)
