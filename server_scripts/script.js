@@ -37,7 +37,7 @@ let getOtherPlayers = function(event) {
 	let player = event.player
 	let allPlayers = event.server.players
 	let otherPlayers = allPlayers.filter(function(value) {
-			return value.name != player.name || TEST_MODE
+			return value.toString() != player.toString() || TEST_MODE
 		})
 	return otherPlayers
 }
@@ -275,13 +275,15 @@ onEvent('item.right_click', event => {
 				separation_crystal_pos.z = player.z
 				separation_crystal_pos.dimension = player.level.dimension
 				player.persistentData.separation_pos = separation_crystal_pos
-
+				console.log(player.persistentData.separation_pos)
 
 				//Set a target & reward
 				let cracked_red_target = NBT.compoundTag()
-				cracked_red_target.name = invaded.name
+				cracked_red_target.target = invaded.toString()
 				cracked_red_target.timeStamp = world.time //Not any use right now but may add later
 				player.persistentData.cracked_red_target = cracked_red_target
+				console.log(player.persistentData.cracked_red_target)
+
 
 				console.info(`Teleporting ${player} to ${goodPlaceX} ${goodPlaceY} ${goodPlaceZ} in ${invadeWorld.dimension}`)
 				event.server.runCommandSilent(`/execute in ${invadeWorld.dimension} run tp ${player} ${goodPlaceX} ${goodPlaceY} ${goodPlaceZ}`)
@@ -351,12 +353,12 @@ onEvent('block.right_click', event => {
 		player.tell('Summoning white phantoms to your world')
 		let players = getOtherPlayers(event)
 		players.forEach(p => {
-			p.tell(`${p.name} is summoning you to his world...`)
+			p.tell(`${p} is summoning you to his world...`)
 			p.tell(`type ${COMMAND_PREFIX}${WHITE_SOAPSTONE_COMMAND} to be summoned`)
 		})
 		summon_sign_pos = event.block.pos
 		summon_sign_dim = event.block.dimension
-		summoner = player.name
+		summoner = player.toString()
 		event.server.scheduleInTicks(WHITE_SOAPSTONE_TIMEOUT_TIME_IN_TICKS, function(callback) {
 			summon_sign_pos = null
 			summon_sign_dim = null
@@ -383,7 +385,7 @@ onEvent('player.chat', function (event) {
 
   //WHITE SOAPSTONE
   if (message.equals(COMMAND_PREFIX + WHITE_SOAPSTONE_COMMAND)) {
-  	if (event.player.name.equals(summoner) && !TEST_MODE) {
+  	if (event.player.toString().equals(summoner) && !TEST_MODE) {
   		event.player.tell('You can not be summoned to your own world!')
   		event.cancel()
   		return
@@ -425,33 +427,35 @@ onEvent('entity.death', function(event) {
 			return
   }
 
-  deadEntity = event.entity;
+  let deadEntity = event.entity
   if (!deadEntity.isPlayer()) {
   	return
   }
-  let damageSource = event.source;
+  let damageSource = event.source
   let damagePlayer = null
   if (damageSource) {
-  	damagePlayer = damageSource.player;
+  	damagePlayer = damageSource.player
   }
   if (damagePlayer && damagePlayer.persistentData && damagePlayer.persistentData.cracked_red_target) {
-  		if (deadEntity.name.equals(damagePlayer.persistentData.cracked_red_target.name)) {
+  	  console.log(damagePlayer.persistentData.cracked_red_target)
+  		if (deadEntity.toString().equals(damagePlayer.persistentData.cracked_red_target.target)) {
   			//Mission accomplished
+  			console.info(`${damagePlayer} killed ${deadEntity} for profit`)
   			damagePlayer.tell('Invasion Successful! Granting reward...')
-  			event.server.runCommandSilent(`/give ${damagePlayer.name} minecraft:player_head{SkullOwner:"${deadEntity.name}"}`)
-  			event.server.runCommandSilent(`/give ${damagePlayer.name} kubejs:kill_token`)
-  			damagePlayer.persistentData.cracked_red_target = null;
+  			event.server.runCommandSilent(`/give ${damagePlayer} minecraft:player_head{SkullOwner:"${deadEntity}"}`)
+  			event.server.runCommandSilent(`/give ${damagePlayer} kubejs:kill_token`)
+  			damagePlayer.persistentData.cracked_red_target.target = '' //If you null this or even empty it the game crashes https://github.com/KubeJS-Mods/KubeJS/issues/369
   			 // Keeping this as a stat. Might do something with this later...
   			if (!damagePlayer.persistentData.red_kill_score) {
   				damagePlayer.persistentData.red_kill_score = 0
   			}
-  			damagePlayer.persistentData.red_kill_score = damagePlayer.persistentData.red_kill_score + 1;
+  			damagePlayer.persistentData.red_kill_score = damagePlayer.persistentData.red_kill_score + 1
   		}
   }
-  if (damagePlayer && bountyTarget && deadEntity.name.equals(bountyTarget)) {
+  if (damagePlayer && bountyTarget && deadEntity.toString().equals(bountyTarget)) {
   			//Mission accomplished
-  			event.server.tell(`${damagePlayer.name} has claimed the bounty on ${bountyTarget}`)
-  			event.server.runCommandSilent(`/give ${damagePlayer.name} kubejs:kill_token ${bountyScore}`)
+  			event.server.tell(`${damagePlayer} has claimed the bounty on ${bountyTarget}`)
+  			event.server.runCommandSilent(`/give ${damagePlayer} kubejs:kill_token ${bountyScore}`)
   			bountyTarget = null
   }
 })
@@ -475,7 +479,7 @@ onEvent('server.load', function(event) {
 		}
 		callback.server.tell(`${bountyPlayer} is at ${bountyPlayer.x} ${bountyPlayer.y} ${bountyPlayer.z} in ${bountyPlayer.level.dimension}`)
 		callback.server.tell(`The reward is ${rewardPoints} medals!`)
-		bountyTarget = bountyPlayer.name
+		bountyTarget = bountyPlayer.toString()
 		bountyScore = rewardPoints
 		callback.reschedule()
 	})
@@ -488,7 +492,7 @@ onEvent('item.food_eaten', function(event) {
 			return
   }
 
-	if (event.item == 'kubejs:beer_bottle' || 'kubejs:ipa_bottle') {
+	if (event.item == 'kubejs:beer_bottle' || event.item == 'kubejs:ipa_bottle') {
 		if (!event.player.stages.has('beer_drank')) {
 	    // Add the stage
 	    event.player.stages.add('beer_drank')
