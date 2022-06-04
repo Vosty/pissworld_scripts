@@ -20,6 +20,7 @@ const REDEYE_INVSASION_MIN_DISTANCE_FROM_PLAYER = 16
 
 const BLACK_SEPARATION_CRYSTAL_TIME_IN_TICKS = 200
 
+const BOUNTY_COMMAND = 'bounty'
 const BOUNTY_HUNT_TIME_IN_TICKS = 72000 // 20tps * 60sec * 60min
 const BOUNTY_REWARD_BASE = 5;
 
@@ -27,8 +28,6 @@ let summon_sign_pos = null
 let summon_sign_dim = null
 let summoner = null
 
-let bountyTarget = null
-let bountyScore = 0;
 
 let PI = 3.141592653
 
@@ -419,6 +418,17 @@ onEvent('player.chat', function (event) {
     event.cancel()
     return
   }
+
+  if (message.equals(COMMAND_PREFIX + BOUNTY_COMMAND)) {
+	if (event.persistentData.bountyPlayer && event.persistentData.bountyPlayer !== '') {
+		event.player.tell(`The current bounty is ${event.persistentData.bountyPlayer}`)
+		event.player.tell(`Their bounty is worth ${event.persistentData.bountyScore} heart clumps`)
+	} else {
+		event.player.tell('There is no current bounty')
+	}
+	event.cancel()
+	return
+  } 
 })
 
 //Currently for Red-Eye Targets & Bounty
@@ -431,10 +441,9 @@ onEvent('entity.death', function(event) {
   if (!deadEntity.isPlayer()) {
   	return
   }
-  let damageSource = event.source
   let damagePlayer = null
-  if (damageSource) {
-  	damagePlayer = damageSource.player
+  if (event.getSource.isPlayer()) {
+	damagePlayer = event.getSource().getPlayer()
   }
   if (damagePlayer && damagePlayer.persistentData && damagePlayer.persistentData.cracked_red_target) {
   	  console.log(damagePlayer.persistentData.cracked_red_target)
@@ -452,11 +461,11 @@ onEvent('entity.death', function(event) {
   			damagePlayer.persistentData.red_kill_score = damagePlayer.persistentData.red_kill_score + 1
   		}
   }
-  if (damagePlayer && bountyTarget && deadEntity.toString().equals(bountyTarget)) {
+  if (damagePlayer && event.server.persistentData.bountyTarget && deadEntity.toString().equals(event.server.persistentData.bountyTarget)) {
   			//Mission accomplished
-  			event.server.tell(`${damagePlayer} has claimed the bounty on ${bountyTarget}`)
-  			event.server.runCommandSilent(`/give ${damagePlayer} kubejs:kill_token ${bountyScore}`)
-  			bountyTarget = null
+  			event.server.tell(`${damagePlayer} has claimed the bounty on ${event.server.persistentData.bountyTarget}`)
+  			event.server.runCommandSilent(`/give ${damagePlayer} kubejs:kill_token ${event.server.persistentData.bountyScore}`)
+			event.server.persistentData.bountyPlayer = ''
   }
 })
 
@@ -470,7 +479,7 @@ onEvent('server.load', function(event) {
 			return
 		}
 		let rand = Math.round(Math.random() * (allPlayers.length-1))
-		console.info(rand)
+		//console.info(rand)
 		let bountyPlayer = allPlayers[rand]
 		callback.server.tell(`${bountyPlayer} is now the bounty target!`)
 		let rewardPoints = BOUNTY_REWARD_BASE
@@ -478,9 +487,9 @@ onEvent('server.load', function(event) {
 				rewardPoints += Math.round(Math.sqrt(bountyPlayer.persistentData.red_kill_score))
 		}
 		callback.server.tell(`${bountyPlayer} is at ${bountyPlayer.x} ${bountyPlayer.y} ${bountyPlayer.z} in ${bountyPlayer.level.dimension}`)
-		callback.server.tell(`The reward is ${rewardPoints} medals!`)
-		bountyTarget = bountyPlayer.toString()
-		bountyScore = rewardPoints
+		callback.server.tell(`The reward is ${rewardPoints} heart clumps!`)
+		callback.server.persistentData.bountyTarget = bountyPlayer.toString()
+		callback.server.persistentData.bountyScore = rewardPoints
 		callback.reschedule()
 	})
 })
