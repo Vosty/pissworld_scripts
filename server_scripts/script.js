@@ -75,9 +75,9 @@ onEvent('recipes', event => {
 
 	//Tree Sap
 	event.recipes.create.mixing(Fluid.of('kubejs:tree_sap', 1000), [
-		'minecraft:oak_sapling',
-		'minecraft:oak_sapling',
-		'minecraft:oak_sapling'
+		'#minecraft:saplings',
+		'#minecraft:saplings',
+		'#minecraft:saplings'
 		])
 
 	//Rubber
@@ -145,11 +145,11 @@ onEvent('recipes', event => {
 	]).processingTime(50).heated()
 	alloy(event, [
 		{ 'name': 'kubejs:yeast_water', 'amount': 100},
-		{ 'name': 'kubejs:hopped_wort', 'amount': 1000}], 'kubejs:beer', 1000, 1000)
+		{ 'name': 'kubejs:hopped_wort', 'amount': 1000}], 'kubejs:beer', 1000, 800)
 	event.recipes.create.filling('kubejs:beer_bottle', ['minecraft:glass_bottle', Fluid.of('kubejs:beer', 333)])
 	alloy(event, [
 		{ 'name': 'kubejs:yeast_water', 'amount': 100},
-		{ 'name': 'kubejs:bitter_wort', 'amount': 1000}], 'kubejs:ipa', 1000, 1000)
+		{ 'name': 'kubejs:bitter_wort', 'amount': 1000}], 'kubejs:ipa', 1000, 800)
 	event.recipes.create.filling('kubejs:ipa_bottle', ['minecraft:glass_bottle', Fluid.of('kubejs:ipa', 333)])
 
 	//Kill metals
@@ -420,15 +420,16 @@ onEvent('player.chat', function (event) {
   }
 
   if (message.equals(COMMAND_PREFIX + BOUNTY_COMMAND)) {
-	if (event.persistentData.bountyPlayer && event.persistentData.bountyPlayer !== '') {
-		event.player.tell(`The current bounty is ${event.persistentData.bountyPlayer}`)
-		event.player.tell(`Their bounty is worth ${event.persistentData.bountyScore} heart clumps`)
+	if (event.server.persistentData.bountyTarget && event.server.persistentData.bountyTarget !== '') {
+		event.player.tell(`The current bounty is ${event.server.persistentData.bountyTarget}`)
+		event.player.tell(`Their bounty is worth ${event.server.persistentData.bountyScore} heart clumps`)
 	} else {
 		event.player.tell('There is no current bounty')
 	}
 	event.cancel()
 	return
-  } 
+  }
+  event.cancel()
 })
 
 //Currently for Red-Eye Targets & Bounty
@@ -442,8 +443,8 @@ onEvent('entity.death', function(event) {
   	return
   }
   let damagePlayer = null
-  if (event.getSource.isPlayer()) {
-	damagePlayer = event.getSource().getPlayer()
+  if (deadEntity.attackingEntity && deadEntity.attackingEntity.isPlayer()) {
+	damagePlayer = deadEntity.attackingEntity
   }
   if (damagePlayer && damagePlayer.persistentData && damagePlayer.persistentData.cracked_red_target) {
   	  console.log(damagePlayer.persistentData.cracked_red_target)
@@ -465,7 +466,7 @@ onEvent('entity.death', function(event) {
   			//Mission accomplished
   			event.server.tell(`${damagePlayer} has claimed the bounty on ${event.server.persistentData.bountyTarget}`)
   			event.server.runCommandSilent(`/give ${damagePlayer} kubejs:kill_token ${event.server.persistentData.bountyScore}`)
-			event.server.persistentData.bountyPlayer = ''
+			event.server.persistentData.bountyTarget = ''
   }
 })
 
@@ -488,7 +489,7 @@ onEvent('server.load', function(event) {
 		}
 		callback.server.tell(`${bountyPlayer} is at ${bountyPlayer.x} ${bountyPlayer.y} ${bountyPlayer.z} in ${bountyPlayer.level.dimension}`)
 		callback.server.tell(`The reward is ${rewardPoints} heart clumps!`)
-		callback.server.persistentData.bountyTarget = bountyPlayer.toString()
+		callback.server.persistentData.bountyTarget = `${bountyPlayer}`
 		callback.server.persistentData.bountyScore = rewardPoints
 		callback.reschedule()
 	})
