@@ -420,15 +420,21 @@ onEvent('player.chat', function (event) {
   }
 
   if (message.equals(COMMAND_PREFIX + BOUNTY_COMMAND)) {
+<<<<<<< HEAD
 	if (event.server.persistentData.bountyPlayer && event.server.persistentData.bountyPlayer !== '') {
 		event.player.tell(`The current bounty is ${event.server.persistentData.bountyPlayer}`)
+=======
+	if (event.server.persistentData.bountyTarget && event.server.persistentData.bountyTarget !== '') {
+		event.player.tell(`The current bounty is ${event.server.persistentData.bountyTarget}`)
+>>>>>>> 8ff4a636759486c54c8281ccc28676d5b673e9e2
 		event.player.tell(`Their bounty is worth ${event.server.persistentData.bountyScore} heart clumps`)
 	} else {
 		event.player.tell('There is no current bounty')
 	}
 	event.cancel()
 	return
-  } 
+  }
+  event.cancel()
 })
 
 //Currently for Red-Eye Targets & Bounty
@@ -442,8 +448,8 @@ onEvent('entity.death', function(event) {
   	return
   }
   let damagePlayer = null
-  if (event.getSource.isPlayer()) {
-	damagePlayer = event.getSource().getPlayer()
+  if (deadEntity.attackingEntity && deadEntity.attackingEntity.isPlayer()) {
+	damagePlayer = deadEntity.attackingEntity
   }
   if (damagePlayer && damagePlayer.persistentData && damagePlayer.persistentData.cracked_red_target) {
   	  console.log(damagePlayer.persistentData.cracked_red_target)
@@ -465,7 +471,7 @@ onEvent('entity.death', function(event) {
   			//Mission accomplished
   			event.server.tell(`${damagePlayer} has claimed the bounty on ${event.server.persistentData.bountyTarget}`)
   			event.server.runCommandSilent(`/give ${damagePlayer} kubejs:kill_token ${event.server.persistentData.bountyScore}`)
-			event.server.persistentData.bountyPlayer = ''
+			event.server.persistentData.bountyTarget = ''
   }
 })
 
@@ -488,7 +494,7 @@ onEvent('server.load', function(event) {
 		}
 		callback.server.tell(`${bountyPlayer} is at ${bountyPlayer.x} ${bountyPlayer.y} ${bountyPlayer.z} in ${bountyPlayer.level.dimension}`)
 		callback.server.tell(`The reward is ${rewardPoints} heart clumps!`)
-		callback.server.persistentData.bountyTarget = bountyPlayer.toString()
+		callback.server.persistentData.bountyTarget = `${bountyPlayer}`
 		callback.server.persistentData.bountyScore = rewardPoints
 		callback.reschedule()
 	})
