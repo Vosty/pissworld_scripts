@@ -20,7 +20,7 @@ onEvent('entity.spawned', function(event) {
 		return
   	}
 
-  	if ((event.entity.type!== 'minecraft:item') && (event.entity.type.startsWith == 'undergarden' || event.entity.level.dimension == 'undergarden:the_undergarden')) {
+  	if ((event.entity.type !== 'minecraft:item') && (event.entity.type.startsWith('undergarden') || event.entity.level.dimension == 'undergarden:the_undergarden')) {
   		let mob = event.entity
   		let NBT = mob.fullNBT
   		

@@ -56,14 +56,14 @@ onEvent('item.registry', event => {
 
 
 	/// PVP Items
-	event.create('dispel_amulet').displayName('Amulet of Dispel').maxDamage(40.0).unstackable.tooltip('Including yourself, dispels all effects on players in a small radius around you')
-	event.create('rage_gem').displayName('Rage Gem').maxDamage(40.0).unstackable.tooltip('Sacrifice some of your health to gain a temporary collection of random buffs')
-	event.create('position_swapper').displayName('Swapper').maxDamage(40.0).unstackable.tooltip('Swaps the position of yourself and a targeted entity')
-	event.create('abductor').displayName('Player Abductor').maxDamage(10.0).unstackable.tooltip('Sends you another player to a random spot on the overworld, for dueling')
+	event.create('dispel_amulet').displayName('Amulet of Dispel').maxDamage(400.0).unstackable().tooltip('Including yourself, dispels all effects on players in a small radius around you')
+	event.create('rage_gem').displayName('Rage Gem').maxDamage(400.0).unstackable().tooltip('Sacrifice some of your health to gain a temporary collection of random buffs')
+	//event.create('position_swapper').displayName('Swapper').maxDamage(400.0).unstackable().tooltip('Swaps the position of yourself and a targeted entity')
+	event.create('abductor').displayName('Player Abductor').maxDamage(100.0).unstackable().tooltip('Sends you another player to a random spot on the overworld, for dueling')
 	event.create('self_destruct_bomb').displayName('Self-Immolator').tooltip('Causes you to explode, killing you instantly (effectiveness may vary)')
 
 	//CTF
-	event.create('finders_compass').displayName('Soul Finder').maxDamage(150.0).unstackable.tooltip('Give you hints towards the Soul of Blessings')
+	event.create('finders_compass').displayName('Soul Finder').maxDamage(1500.0).unstackable().tooltip('Give you hints towards the Soul of Blessings')
 })
 
 onEvent('block.registry', event => {

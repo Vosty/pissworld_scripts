@@ -79,15 +79,18 @@ function createPlayerLeaderBoardStats(player) {
 
 function getPlayerLeaderBoardStats(player, server) {
 	if (!server.persistentData.capture_leaderboard) {
-		server.persistentData.capture_leaderboard = NBT.ListTag()
+		console.info('Creating bounty leaderboard data')
+		server.persistentData.capture_leaderboard = NBT.listTag()
 	}
 	let target = null
 		server.persistentData.capture_leaderboard.forEach(entry => {
 		if (player === entry.name) {
 			target = entry
+			console.info(`Found Leaderboard Stats for ${player}`)
 		}
 	})
 	if (!target) {
+		console.info(`Creating leaderboard data for ${player}`)
 		target = createPlayerLeaderBoardStats(player)
 		server.persistentData.capture_leaderboard.add(target)
 	}
@@ -102,6 +105,7 @@ function updateLeaderBoardStats(player, server, data) {
 	let i
 	for (i = 0; i < server.persistentData.capture_leaderboard.length; i++) {
 		if (server.persistentData.capture_leaderboard.get(i).name == player) {
+			console.info(`Updating leaderboard data for ${player}: ${data}`)
 			server.persistentData.capture_leaderboard.remove(i)
 			server.persistentData.capture_leaderboard.add(i, data)
 		}
@@ -139,7 +143,7 @@ function applyPotionBuff(player, server) {
 
 
 
-onEvent('block.place', function (event) {
+onEvent('block.place', event => {
 	let world = event.level
 
 	if (world.side !== "SERVER") {
@@ -147,22 +151,26 @@ onEvent('block.place', function (event) {
 	}
 
 	if (event.block.id === STEAL_BLOCK_ID) {
-		let player = event.player
+		let player = event.entity
+		if (!player.isPlayer()){
+			event.server.tell('UHHHHH DONT DO THAT, WHATEVER YOU JUST DID')
+			return
+		}
 		event.server.persistentData.steal_block_owner = player.toString()
 		event.server.persistentData.steal_block_placed = true
 		let steal_block_location = NBT.compoundTag()
 		steal_block_location.x = event.block.x
 		steal_block_location.y = event.block.y
 		steal_block_location.z = event.block.z
-		steal.block.location.dimension = world.dimension
-		event.server.steal_block_location = steal_block_location
+		steal_block_location.dimension = world.dimension
+		event.server.persistentData.steal_block_location = steal_block_location
 
 		if (event.block.down && event.block.down == RECEPTICLE_BLOCK_ID) {
 			event.server.tell(`${player} has returned the Soul of Blessings to its rightful place at the spawn!`)
 			event.server.persistentData.steal_block_shared = true
-			let data = getPlayerLeaderBoardStats(player.toString(), server)
+			let data = getPlayerLeaderBoardStats(player.toString(), event.server)
 			data.returns += 1
-			updateLeaderBoardStats(player.toString(), server, data)
+			updateLeaderBoardStats(player.toString(), event.server, data)
 		} else {
 			event.server.tell(`${player} has hidden the Soul of Blessings for their own personal gain!`)
 			event.server.persistentData.steal_block_shared = false
@@ -189,7 +197,7 @@ onEvent('block.break', function (event) {
 			return
 		}
 
-		if (event.server.persistentData.steal_block_owner && player.toString().equals(event.server.persistentData.steal_block_owner)) {
+		if ((event.server.persistentData.steal_block_owner && player.toString().equals(event.server.persistentData.steal_block_owner)) && !TEST_MODE) {
 			//To keep things simple in regards to preventing leaderboard abuse, you can't break your own SUPER CUBE
 			//Place it correctly the right time lol
 			event.player.tell(`You can't break your own placed Soul of Blessings`)
@@ -198,7 +206,7 @@ onEvent('block.break', function (event) {
 			return
 		}
 
-		let playerData = getPlayerLeaderBoardStats(player.toString(), server)
+		let playerData = getPlayerLeaderBoardStats(player.toString(), event.server)
 
 		if (event.server.persistentData.steal_block_shared) { //Exists and is true
 			event.server.tell(`${player} has stolen the Soul of Blessings from the spawn!`)
@@ -226,7 +234,6 @@ onEvent('item.right_click', event => {
 
 	let item = event.getItem()
 
-	// Soapstone draw mark
 	if (item.id === COMPASS_ITEM_ID) {
 		let player = event.getPlayer()
 		if (!event.server.persistentData.steal_block_owner) {
@@ -250,9 +257,9 @@ onEvent('item.right_click', event => {
 			let dx = loc.x - player.x
 			let dy = loc.y - player.y
 			let dz = loc.z - player.z
-			let dist = Math.sqrt(Math.pow(dx,2) + Math.pow(dy,2) + Math.pow(dz,2))
-			player.tell(`${event.persistentData.steal_block_owner}'s Soul of Blessings is hidden ${dist} blocks away`)
-			player.damageHeldItem(event.hand, 1)
+			let dist = Math.round(Math.sqrt(Math.pow(dx,2) + Math.pow(dy,2) + Math.pow(dz,2)))
+			player.tell(`${event.server.persistentData.steal_block_owner}'s Soul of Blessings is hidden ${dist} blocks away`)
+			player.damageHeldItem(event.hand, 10)
 			return
 		}
 	}
@@ -268,20 +275,18 @@ onEvent('server.load', function(event) {
 			callback.reschedule()
 			return
 		}
-
-
 		// Privately placed by a player
 		if (callback.server.persistentData.steal_block_placed && !callback.server.persistentData.steal_block_shared) {
-			let leaderData = getPlayerLeaderBoardStats(callback.server.persistentData)
+			let leaderData = getPlayerLeaderBoardStats(callback.server.persistentData.steal_block_owner, callback.server)
 			let otherPlayers = getOtherOnlinePlayers(callback.server.persistentData.steal_block_owner, callback.server)
 			if (otherPlayers.length > 0) {
 				// Other players are online, they get minutes held stat
-				leaderData.minutes_held += BUFF_APPLY_RATE_MINUTES
+				leaderData.minutes_held += BUFF_APPLY_RATE_MINS
 			}
 
-			if (otherPlayers.length > 0 && isPlayerOnline(callback.server.persistentData.steal_block_owner)) {
+			if (otherPlayers.length > 0 && isPlayerOnline(callback.server.persistentData.steal_block_owner, callback.server)) {
 				// Target player is online with other players, they get buffs and & buffs received stats
-				let scumbag = isPlayerOnline(callback.server.persistentData.steal_block_owner)
+				let scumbag = isPlayerOnline(callback.server.persistentData.steal_block_owner, callback.server)
 				scumbag.tell('Receiving blessings from the Soul of Blessings')
 				for (let i = 0; i < otherPlayers.length; i++) {
 					otherPlayers[i].tell(`${callback.server.persistentData.steal_block_owner} is receiving buffs from their desecration of the Soul of Blessings`)
@@ -299,7 +304,10 @@ onEvent('server.load', function(event) {
 				applyPotionBuff(p, callback.server)
 			})
 			callback.reschedule()
+			return
 		}
+		callback.reschedule()
+		return
 	})
 })
 
@@ -322,14 +330,14 @@ onEvent('player.chat', function (event) {
 		players = event.server.persistentData.capture_leaderboard
 		let text = Text.of('Soul of Blessings Leaderboard: ').gold()
 		event.player.tell(text)
-		text = Text.of(String.format("%-15s", 'PLAYER NAME')).append(' | ').append(String.format("%-10s", 'CAPTURES'))
-		.append(' | ').append(String.format("%-12s", 'DEFILEMENTS')).append(' | ').append(String.format("%-15s", 'BUFFS RECEIVED'))
-		.append(' | ').append(String.format("%-15s", 'MINUTES HELD'))
+		text = Text.of('PLAYER NAME').append(' | ').append('CAPTURES')
+		.append(' | ').append('DEFILEMENTS').append(' | ').append('RETURNS').append(' | ')
+		.append('BUFFS RECEIVED').append(' | ').append('MINUTES HELD')
 		event.player.tell(text)
 		players.forEach(p => {
-			text = Text.of(String.format("%-15s", `${p.name}`)).append(' | ').append(String.format("%-10s", `${p.captures}`))
-			.append(' | ').append(String.format("%-12s", `${p.public_captures}`)).append(' | ').append(String.format("%-15s", `${p.buffs_received}`))
-			.append(' | ').append(String.format("%-15s", `${p.minutes_held}`))
+			text = Text.of(`${p.name}`).append(' | ').append(`${p.captures}`)
+			.append(' | ').append(`${p.public_captures}`).append(' | ').append(`${p.returns}`)
+			.append(' | ').append(`${p.buffs_received}`).append(' | ').append(`${p.minutes_held}`)
 			event.player.tell(text)
 		})
 		event.cancel()

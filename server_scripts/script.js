@@ -64,33 +64,21 @@ let cuttingBoard = function(event, input, tool, results) {
 	})
 }
 
-let enchantingApparatusThree = function(event, input1, input2, input3, reagent, result) {
+let enchantingApparatus = function(event, pedestal_items, reagent, result, sourceCost) {
 	event.custom({
-	  "type": "ars_nouveau:enchanting_apparatus",
-	  "item_1": [
-	    {
-	      "item": input1
-	    }
-	  ],
-	  "item_2": [
-	    {
-	      "item": input2
-	    }
-	  ],
-	  "item_3": [
-	    {
-	      "item": input4
-	    }
-	  ],
-	  "reagent": [
-	    {
-	      "item": reagent
-	    }
-	  ],
-	  "output": {
-	    "item": result
-	  }
-	})
+		"type": "ars_nouveau:enchanting_apparatus",
+		"reagent": [
+		  {
+			"item": reagent
+		  }
+		],
+		"pedestalItems": pedestal_items, //[{"item": {"tag": "forge:ender_pearls"}}]
+		"output": {
+		  "item": result
+		},
+		"sourceCost": sourceCost,
+		"keepNbtOfReagent": false
+	  })
 }
 
 let manaInfusion = function(event, input, output, manaCost) {
@@ -240,10 +228,26 @@ onEvent('recipes', event => {
 	event.shapeless('2x farmersdelight:potato_crate', ['2x quark:potato_crate'])
 
 	//pvp items
-	enchantingApparatusThree(event, 'minecraft:milk_bucket', 'kubejs:otherworld_shard', 'minecraft:cobweb', 'kubejs:kill_metal_ingot', 'kubejs:dispel_amulet')
-	enchantingApparatusThree(event, 'minecraft:rotten_flesh', 'kubejs:otherworld_shard', 'minecraft:emerald', 'kubejs:kill_metal_ingot', 'kubejs:rage_gem')
-	enchantingApparatusThree(event, 'minecraft:ender_pearl', 'kubejs:otherworld_shard', 'minecraft:fishing_rod', 'kubejs:kill_metal_ingot', 'kubejs:position_swapper')
-	enchantingApparatusThree(event, 'minecraft:lead', 'kubejs:otherworld_shard', 'minecraft:firework_rocket', 'kubejs:kill_metal_ingot', 'kubejs:abductor')
+	enchantingApparatus(event, [
+		{"item": {"item": 'minecraft:milk_bucket'}},
+		{"item": {"item": 'kubejs:otherworld_shard'}},
+		{"item": {"item": 'minecraft:cobweb'}}
+	], 'kubejs:kill_metal_ingot', 'kubejs:dispel_amulet', 0)
+	enchantingApparatus(event, [
+		{"item": {"item": 'minecraft:rotten_flesh'}},
+		{"item": {"item": 'kubejs:otherworld_shard'}},
+		{"item": {"item": 'minecraft:emerald'}}
+	], 'kubejs:kill_metal_ingot', 'kubejs:rage_gem', 0)
+	enchantingApparatus(event, [
+		{"item": {"item": 'minecraft:ender_pearl'}},
+		{"item": {"item": 'kubejs:otherworld_shard'}},
+		{"item": {"item": 'minecraft:fishing_rod'}}
+	], 'kubejs:kill_metal_ingot', 'kubejs:position_swapper', 0)
+	enchantingApparatus(event, [
+		{"item": {"item": 'minecraft:lead'}},
+		{"item": {"item": 'kubejs:otherworld_shard'}},
+		{"item": {"item": 'minecraft:firework_rocket'}}
+	], 'kubejs:kill_metal_ingot', 'kubejs:abductor', 0)
 	elvenTrade(event, [{"item":'kubejs:otherworld_shard'},{"item":'minecraft:tnt'}],'kubejs:self_destruct_bomb')
 
 

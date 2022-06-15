@@ -44,13 +44,13 @@ onEvent('item.right_click', event => {
 		let y = player.y
 		let z = player.z
 		let effected = world.getEntitiesWithin(AABB.of(x - DISPEL_RADIUS, y - DISPEL_RADIUS, z - DISPEL_RADIUS, x + DISPEL_RADIUS, y + DISPEL_RADIUS, z + DISPEL_RADIUS))
-		effected.forEach(e => {
-			let p = e.player
-			if (p) {
-				p.potionEffects.clear()
+		for (let e of effected) {
+			if (e.isPlayer()) {
+				e.getPotionEffects().clear()
+				e.runCommandSilent(`/playsound minecraft:block.amethyst_cluster.break master ${e}`)
 			}
-		})
-		player.damageHeldItem(event.hand, 1)
+		}
+		player.damageHeldItem(event.hand, 10)
 		return
 	}
 
@@ -60,18 +60,20 @@ onEvent('item.right_click', event => {
 		player.addItemCooldown('kubejs:rage_gem', 20 * RAGE_GEM_COOLDOWN_SECONDS )
 		player.attack(RAGE_GEM_SACRIFICE_DMG)
 		for (let i = 0; i < RAGE_GEM_BUFFS; i++) {
-			applyRageGemBuff(player.toString(), event.server)
+			applyRageGemBuff(player, event.server)
+			console.log('RAGE')
 		}
-		player.damageHeldItem(event.hand, 1)
+		player.damageHeldItem(event.hand, 10)
 		return
 	}
 
 	if (item.id === 'kubejs:self_destruct_bomb') {
 		let player = event.player
 		world.spawnLightning(player.x,player.y,player.z, true, player)
-		let explosion = world.createExplosion(player.x.player.y,player.z)
-		explosion.exploder(player)
-		explosion.strength(SELF_DESTRUCT_EXPLOSION_STRENGTH)
+		let explosion = world.createExplosion(player.x,player.y,player.z)
+		//explosion.causesFire(true)
+		//explosion.exploder(player)
+		explosion.strength = SELF_DESTRUCT_EXPLOSION_STRENGTH
 		explosion.explode()
 		if (event.hand == MAIN_HAND) {
 			player.getMainHandItem().count--
@@ -83,10 +85,13 @@ onEvent('item.right_click', event => {
 	}
 
 
-	if (item.id === 'kubejs:position_swapper') {
+	/*if (item.id === 'kubejs:position_swapper') {
 		let player = event.player
 		let raytraceResult = player.rayTrace(SWAPPER_DISTANCE)
-		if (raytraceResult.entity) {
+		console.info(raytraceResult.entity)
+		console.info(raytraceResult.block)
+		if (raytraceResult.block) {
+			world.entities.getE
 			player.addItemCooldown('kubejs:position_swapper', 20 * SWAPPER_COOLDOWN_SECONDS )
 			let e = raytraceResult.entity
 			let x = player.x
@@ -101,7 +106,7 @@ onEvent('item.right_click', event => {
 			player.damageHeldItem(event.hand, 1)
 		}
 		return
-	}
+	}*/
 
 
 	if (item.id === 'kubejs:abductor') {
@@ -113,16 +118,15 @@ onEvent('item.right_click', event => {
 		let effected = world.getEntitiesWithin(AABB.of(x - ABDUCTOR_RADIUS, y - ABDUCTOR_RADIUS, z - ABDUCTOR_RADIUS, x + ABDUCTOR_RADIUS, y + ABDUCTOR_RADIUS, z + ABDUCTOR_RADIUS))
 		let players = []
 		effected.forEach(e => {
-			let p = e.player
-			if (p) {
-				players.add(e)
+			if (e.isPlayer()) {
+				players.push(e)
 			}
 		})
 		if (players.length < 2) {
 			player.tell('No nearby players!')
 			return
 		}
-		player.addItemCooldown('kubejs:abductor', 20 * ABDUCTOR_COOLDOWN_SECONDS )
+		//player.addItemCooldown('kubejs:abductor', 20 * ABDUCTOR_COOLDOWN_SECONDS )
 		let dropX = (Math.random() * WORLD_BORDER * 2.0) - WORLD_BORDER
 		let dropZ = (Math.random() * WORLD_BORDER * 2.0) - WORLD_BORDER
 		players.forEach(p => {
@@ -130,10 +134,12 @@ onEvent('item.right_click', event => {
 			let xOffset = x - p.x + dropX
 			let zOffset = z - p.z + dropZ
 			// Fall from the top of the world PUBG style
-			event.server.runCommandSilent(`/execute in minecraft:overworld run tp ${xOffset} ${MAX_Y} ${dropZ}`)
+			console.info(p)
+			event.server.runCommandSilent(`/execute in minecraft:overworld run tp ${p} ${xOffset} ${MAX_Y} ${dropZ}`)
 			event.server.runCommandSilent(`/effect give ${p} minecraft:slow_falling 90`) //is 90 enough / too much?
+			p.runCommandSilent(`/playsound minecraft:block.bell.resonate master ${p}`)
 		})
-		player.damageHeldItem(event.hand, 1)
+		player.damageHeldItem(event.hand, 10)
 		return
 	}
 })
