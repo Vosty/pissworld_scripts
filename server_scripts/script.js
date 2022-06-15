@@ -250,6 +250,16 @@ onEvent('recipes', event => {
 	], 'kubejs:kill_metal_ingot', 'kubejs:abductor', 0)
 	elvenTrade(event, [{"item":'kubejs:otherworld_shard'},{"item":'minecraft:tnt'}],'kubejs:self_destruct_bomb')
 
+	//Compass
+	event.shaped('1x kubejs:finders_compass', [
+		'SSS',
+		'SAS',
+		'SSS'
+		], {
+			S: 'kubejs:otherworld_shard',
+			A: 'minecraft:compass'
+		})
+
 
 })
 
