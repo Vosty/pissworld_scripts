@@ -64,6 +64,60 @@ let cuttingBoard = function(event, input, tool, results) {
 	})
 }
 
+let enchantingApparatusThree = function(event, input1, input2, input3, reagent, result) {
+	event.custom({
+	  "type": "ars_nouveau:enchanting_apparatus",
+	  "item_1": [
+	    {
+	      "item": input1
+	    }
+	  ],
+	  "item_2": [
+	    {
+	      "item": input2
+	    }
+	  ],
+	  "item_3": [
+	    {
+	      "item": input4
+	    }
+	  ],
+	  "reagent": [
+	    {
+	      "item": reagent
+	    }
+	  ],
+	  "output": {
+	    "item": result
+	  }
+	})
+}
+
+let manaInfusion = function(event, input, output, manaCost) {
+	event.custom({
+	  "type": "botania:mana_infusion",
+	  "input": {
+	    "item": input
+	  },
+	  "output": {
+	    "item": output
+	  },
+	  "mana": manaCost
+	})
+}
+
+let elvenTrade = function(event, inputs, output) {
+	{
+  "type": "botania:elven_trade",
+  "ingredients": inputs, //[{"tag": "botania:manasteel_ingots"},{"item": "minecraft:diamond"}]
+  "output": [
+    {
+      "item": output
+    }
+  ]
+}
+}
+
 
 
 console.info('Hello, World! (You will see this line every time server resources reload)')
@@ -165,6 +219,13 @@ onEvent('recipes', event => {
 	event.shapeless('1x kubejs:cheese_block', ['4x kubejs:cheese'])
 	event.shapeless('4x kubejs:cheese', ['1x kubejs:cheese_block'])
 
+	//pvp items
+	enchantingApparatusThree(event, 'minecraft:milk_bucket', 'kubejs:otherworld_shard', 'minecraft:cobweb', 'kubejs:kill_metal_ingot', 'kubejs:dispel_amulet')
+	enchantingApparatusThree(event, 'minecraft:rotten_flesh', 'kubejs:otherworld_shard', 'minecraft:emerald', 'kubejs:kill_metal_ingot', 'kubejs:rage_gem')
+	enchantingApparatusThree(event, 'minecraft:ender_pearl', 'kubejs:otherworld_shard', 'minecraft:fishing_rod', 'kubejs:kill_metal_ingot', 'kubejs:position_swapper')
+	enchantingApparatusThree(event, 'minecraft:lead', 'kubejs:otherworld_shard', 'minecraft:firework_rocket', 'kubejs:kill_metal_ingot', 'kubejs:abductor')
+	elvenTrade(event, [{"item":'kubejs:otherworld_shard'},{"item":'minecraft:tnt'}],'kubejs:self_destruct_bomb')
+
 })
 
 onEvent('item.tags', event => {
@@ -208,6 +269,7 @@ onEvent('item.right_click', event => {
 	// Homeward bone
 	if (item.id === 'kubejs:homeward_bone') {
 		let player = event.getPlayer()
+		player.addItemCooldown('kubejs:homeward_bone', 20)
 		let spawnpoint = player.getSpawnLocation()
 		let hand = event.hand
 		event.server.runCommandSilent(`/execute in minecraft:overworld run tp ${player} ${spawnpoint.x} ${spawnpoint.y} ${spawnpoint.z}`)
@@ -224,6 +286,9 @@ onEvent('item.right_click', event => {
 		let player = event.player
 		let allPlayers = event.server.players
 		let worldsToInvade = getOtherPlayers(event)
+
+				player.addItemCooldown('kubejs:cracked_redeye_orb', 20*60)
+
 		if (worldsToInvade.length == 0) {
 			player.tell('No worlds to invade')
 			return
@@ -420,13 +485,9 @@ onEvent('player.chat', function (event) {
   }
 
   if (message.equals(COMMAND_PREFIX + BOUNTY_COMMAND)) {
-<<<<<<< HEAD
-	if (event.server.persistentData.bountyPlayer && event.server.persistentData.bountyPlayer !== '') {
-		event.player.tell(`The current bounty is ${event.server.persistentData.bountyPlayer}`)
-=======
+
 	if (event.server.persistentData.bountyTarget && event.server.persistentData.bountyTarget !== '') {
 		event.player.tell(`The current bounty is ${event.server.persistentData.bountyTarget}`)
->>>>>>> 8ff4a636759486c54c8281ccc28676d5b673e9e2
 		event.player.tell(`Their bounty is worth ${event.server.persistentData.bountyScore} heart clumps`)
 	} else {
 		event.player.tell('There is no current bounty')
