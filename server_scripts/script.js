@@ -238,11 +238,11 @@ onEvent('recipes', event => {
 		{"item": {"item": 'kubejs:otherworld_shard'}},
 		{"item": {"item": 'minecraft:emerald'}}
 	], 'kubejs:kill_metal_ingot', 'kubejs:rage_gem', 0)
-	enchantingApparatus(event, [
+	/*enchantingApparatus(event, [
 		{"item": {"item": 'minecraft:ender_pearl'}},
 		{"item": {"item": 'kubejs:otherworld_shard'}},
 		{"item": {"item": 'minecraft:fishing_rod'}}
-	], 'kubejs:kill_metal_ingot', 'kubejs:position_swapper', 0)
+	], 'kubejs:kill_metal_ingot', 'kubejs:position_swapper', 0)*/
 	enchantingApparatus(event, [
 		{"item": {"item": 'minecraft:lead'}},
 		{"item": {"item": 'kubejs:otherworld_shard'}},

@@ -83,7 +83,7 @@ onEvent('block.registry', event => {
 
 	//CTF
 	event.create('steal_block').displayName('Soul of Blessings').hardness(15.0).resistance(1200.0)
-	event.create('recepticle').displayName('Blessing Altar').hardness(-1.0)
+	event.create('recepticle').displayName('Blessing Altar').hardness(-1.0).resistance(3600000.0)
 })
 
 
