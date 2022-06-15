@@ -165,6 +165,28 @@ onEvent('recipes', event => {
 	event.shapeless('1x kubejs:cheese_block', ['4x kubejs:cheese'])
 	event.shapeless('4x kubejs:cheese', ['1x kubejs:cheese_block'])
 
+	// Fix
+	event.shaped('1x quark:deepslate_furnace', [
+		'SSS',
+		'S S',
+		'SSS'
+		], {
+			S: 'minecraft:deepslate',
+		})
+
+	//Convert
+	event.shapeless('1x quark:gold_bars', ['1x tconstruct:gold_bars'])
+	event.shapeless('1x tconstruct:gold_bars', ['1x quark:gold_bars'])
+	event.shapeless('2x quark:carrot_crate', ['2x farmersdelight:carrot_crate'])
+	event.shapeless('2x farmersdelight:carrot_crate', ['2x quark:carrot_crate'])
+	event.shapeless('2x quark:beetroot_crate', ['2x farmersdelight:beetroot_crate'])
+	event.shapeless('2x farmersdelight:beetroot_crate', ['2x quark:beetroot_crate'])
+	event.shapeless('2x quark:potato_crate', ['2x farmersdelight:potato_crate'])
+	event.shapeless('2x farmersdelight:potato_crate', ['2x quark:potato_crate'])
+
+
+
+
 })
 
 onEvent('item.tags', event => {
@@ -176,6 +198,7 @@ onEvent('item.tags', event => {
 	event.get('forge:tools/knives').add('aquaculture:gold_fillet_knife')
 	event.get('forge:tools/knives').add('aquaculture:diamond_fillet_knife')
 	event.get('forge:tools/knives').add('aquaculture:neptunium_fillet_knife')
+	//event.get('curios:bundle').add('occultism:satchel') //This didn't work :(
 })
 
 
@@ -420,13 +443,8 @@ onEvent('player.chat', function (event) {
   }
 
   if (message.equals(COMMAND_PREFIX + BOUNTY_COMMAND)) {
-<<<<<<< HEAD
-	if (event.server.persistentData.bountyPlayer && event.server.persistentData.bountyPlayer !== '') {
-		event.player.tell(`The current bounty is ${event.server.persistentData.bountyPlayer}`)
-=======
 	if (event.server.persistentData.bountyTarget && event.server.persistentData.bountyTarget !== '') {
 		event.player.tell(`The current bounty is ${event.server.persistentData.bountyTarget}`)
->>>>>>> 8ff4a636759486c54c8281ccc28676d5b673e9e2
 		event.player.tell(`Their bounty is worth ${event.server.persistentData.bountyScore} heart clumps`)
 	} else {
 		event.player.tell('There is no current bounty')
@@ -470,7 +488,7 @@ onEvent('entity.death', function(event) {
   if (damagePlayer && event.server.persistentData.bountyTarget && deadEntity.toString().equals(event.server.persistentData.bountyTarget)) {
   			//Mission accomplished
   			event.server.tell(`${damagePlayer} has claimed the bounty on ${event.server.persistentData.bountyTarget}`)
-  			event.server.runCommandSilent(`/give ${damagePlayer} kubejs:kill_token ${event.server.persistentData.bountyScore}`)
+  			event.server.runCommandSilent(`/givgit e ${damagePlayer} kubejs:kill_token ${event.server.persistentData.bountyScore}`)
 			event.server.persistentData.bountyTarget = ''
   }
 })
