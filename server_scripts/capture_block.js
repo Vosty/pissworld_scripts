@@ -1,6 +1,6 @@
-const STEAL_BLOCK_ID = 'kubejs:tingy'
+const STEAL_BLOCK_ID = 'kubejs:steal_block'
 const RECEPTICLE_BLOCK_ID = 'kubejs:recepticle'
-const COMPASS_ITEM_ID = 'kubejs:compass'
+const COMPASS_ITEM_ID = 'kubejs:finders_compass'
 
 const LEADERBOARD_COMMAND = 'leaderboard'
 
@@ -112,7 +112,7 @@ function isPlayerOnline(player, server) {
 	let allPlayers = server.players
 	let target = false
 	allPlayers.forEach(p => {
-		if (player.equals(p.toString()) {
+		if (player.equals(p.toString())) {
 			target = p
 		}
 	})
@@ -158,13 +158,13 @@ onEvent('block.place', function (event) {
 		event.server.steal_block_location = steal_block_location
 
 		if (event.block.down && event.block.down == RECEPTICLE_BLOCK_ID) {
-			event.server.tell(`${player} has returned the SUPER CUBE to its rightful place at the spawn!`)
+			event.server.tell(`${player} has returned the Soul of Blessings to its rightful place at the spawn!`)
 			event.server.persistentData.steal_block_shared = true
 			let data = getPlayerLeaderBoardStats(player.toString(), server)
 			data.returns += 1
 			updateLeaderBoardStats(player.toString(), server, data)
 		} else {
-			event.server.tell(`${player} has hidden the SUPER CUBE for their own personal gain!`)
+			event.server.tell(`${player} has hidden the Soul of Blessings for their own personal gain!`)
 			event.server.persistentData.steal_block_shared = false
 		}
 	}
@@ -182,7 +182,7 @@ onEvent('block.break', function (event) {
 	if (event.block.id === STEAL_BLOCK_ID) {
 		let player = event.player
 		if (!player) {
-			event.server.tell('The super cube was broken, but not by a player?')
+			event.server.tell('The Soul of Blessings was broken, but not by a player?')
 			event.server.persistentData.steal_block_placed = false
 			event.server.persistentData.steal_block_shared = false
 			event.server.persistentData.steal_block_owner = UNKNOWN_PLAYER_NAME
@@ -192,7 +192,7 @@ onEvent('block.break', function (event) {
 		if (event.server.persistentData.steal_block_owner && player.toString().equals(event.server.persistentData.steal_block_owner)) {
 			//To keep things simple in regards to preventing leaderboard abuse, you can't break your own SUPER CUBE
 			//Place it correctly the right time lol
-			event.player.tell(`You can't break your own SUPER CUBE`)
+			event.player.tell(`You can't break your own placed Soul of Blessings`)
 			event.player.tell('Too bad? Cry about it...')
 			event.cancel()
 			return
@@ -201,11 +201,11 @@ onEvent('block.break', function (event) {
 		let playerData = getPlayerLeaderBoardStats(player.toString(), server)
 
 		if (event.server.persistentData.steal_block_shared) { //Exists and is true
-			event.server.tell(`${player} has stolen the SUPER CUBE from the spawn!`)
+			event.server.tell(`${player} has stolen the Soul of Blessings from the spawn!`)
 			playerData.public_captures++
 			playerData.captures++
 		} else {
-			event.server.tell(`${player} has found and broken ${event.server.persistentData.steal_block_owner}'s SUPER CUBE!`)
+			event.server.tell(`${player} has found and broken ${event.server.persistentData.steal_block_owner}'s placed Soul of Blessings!`)
 			playerData.captures++
 		}
 
@@ -234,15 +234,15 @@ onEvent('item.right_click', event => {
 			return
 		}
 		 else if (!event.server.persistentData.steal_block_placed) { // Exists or false
-			player.tell(`The SUPER CUBE has not been placed by ${event.server.persistentData.steal_block_owner}`)
+			player.tell(`The Soul of Blessings has not been placed by ${event.server.persistentData.steal_block_owner}`)
 			return
 		}
 		else if (event.server.persistentData.steal_block_shared) {
-			player.tell('The SUPER CUBE rests peacefully at the spawn, giving blessings to all')
+			player.tell('The Soul of Blessings rests peacefully at the spawn, giving blessings to all')
 			player.damageHeldItem(event.hand, 1)
 			return
 		} else if (event.server.persistentData.steal_block_placed && player.level.dimension !== event.server.persistentData.steal_block_location.dimension) {
-			player.tell('The SUPER CUBE rests in another dimension...')
+			player.tell('The Soul of Blessings rests in another dimension...')
 			player.damageHeldItem(event.hand, 1)
 			return
 		} else {
@@ -251,12 +251,12 @@ onEvent('item.right_click', event => {
 			let dy = loc.y - player.y
 			let dz = loc.z - player.z
 			let dist = Math.sqrt(Math.pow(dx,2) + Math.pow(dy,2) + Math.pow(dz,2))
-			player.tell(`${event.persistentData.steal_block_owner}'s SUPER CUBE is hidden ${dist} blocks away`)
+			player.tell(`${event.persistentData.steal_block_owner}'s Soul of Blessings is hidden ${dist} blocks away`)
 			player.damageHeldItem(event.hand, 1)
 			return
 		}
 	}
-}
+})
 
 
 
@@ -282,9 +282,9 @@ onEvent('server.load', function(event) {
 			if (otherPlayers.length > 0 && isPlayerOnline(callback.server.persistentData.steal_block_owner)) {
 				// Target player is online with other players, they get buffs and & buffs received stats
 				let scumbag = isPlayerOnline(callback.server.persistentData.steal_block_owner)
-				scumbag.tell('Receiving blessings from SUPER CUBE')
+				scumbag.tell('Receiving blessings from the Soul of Blessings')
 				for (let i = 0; i < otherPlayers.length; i++) {
-					otherPlayers[i].tell(`${callback.server.persistentData.steal_block_owner} is receiving buffs from their desecration of the SUPER CUBE`)
+					otherPlayers[i].tell(`${callback.server.persistentData.steal_block_owner} is receiving buffs from their desecration of the Soul of Blessings`)
 					applyPotionBuff(scumbag, callback.server)
 					leaderData.buffs_received++
 				}
@@ -294,7 +294,7 @@ onEvent('server.load', function(event) {
 			return
 		// Placed at the spawn
 		} else if (callback.server.persistentData.steal_block_placed && callback.server.persistentData.steal_block_shared) {
-			callback.server.tell('By the grace of the shared SUPER CUBE, each player will receive a blessing')
+			callback.server.tell('By the grace of the shared Soul of Blessings, each player will receive a blessing')
 			allPlayers.forEach(p => {
 				applyPotionBuff(p, callback.server)
 			})
@@ -320,7 +320,7 @@ onEvent('player.chat', function (event) {
 			return
 		}
 		players = event.server.persistentData.capture_leaderboard
-		let text = Text.of('SUPER CUBE LEADERBOARD: ').gold()
+		let text = Text.of('Soul of Blessings Leaderboard: ').gold()
 		event.player.tell(text)
 		text = Text.of(String.format("%-15s", 'PLAYER NAME')).append(' | ').append(String.format("%-10s", 'CAPTURES'))
 		.append(' | ').append(String.format("%-12s", 'DEFILEMENTS')).append(' | ').append(String.format("%-15s", 'BUFFS RECEIVED'))
