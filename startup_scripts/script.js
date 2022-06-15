@@ -31,7 +31,7 @@ onEvent('item.registry', event => {
 		food.saturation(1.05)
 		food.effect('minecraft:nausea', 12, 1, 1.0)
 	})
-	event.create('ipa_bottle').displayName('Bottle of IPA').food(food => {
+	event.create('ipa_bottle').displayName('Bottle of Beer').food(food => {
 		food.hunger(6)
 		food.saturation(1.10)
 		food.effect('minecraft:nausea', 12, 1, 1.0)
@@ -53,6 +53,14 @@ onEvent('item.registry', event => {
 	})*/
 	event.create('black_separation_crystal').displayName('Black Separation Crystal').tooltip('Use to go home from another world')
 	event.create('homeward_bone').displayName('Homeward Bone').tooltip('Returns you to your bed in the overworld')
+
+
+	/// PVP Items
+	event.create('dispel_amulet').displayName('Amulet of Dispel').maxDamage(40.0).unstackable.tooltip('Including yourself, dispels all effects on players in a small radius around you')
+	event.create('rage_gem').displayName('Rage Gem').maxDamage(40.0).unstackable.tooltip('Sacrifice some of your health to gain a temporary collection of random buffs')
+	event.create('position_swapper').displayName('Swapper').maxDamage(40.0).unstackable.tooltip('Swaps the position of yourself and a targeted entity')
+	event.create('abductor').displayName('Player Abductor').maxDamage(10.0).unstackable.tooltip('Sends you another player to a random spot on the overworld, for dueling')
+	event.create('self_destruct_bomb').displayName('Self-Immolator').tooltip('Causes you to explode, killing you instantly (effectiveness may vary)')
 })
 
 onEvent('block.registry', event => {
