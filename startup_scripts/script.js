@@ -97,4 +97,11 @@ onEvent('fluid.registry', event => {
 	event.create('ipa').thinTexture(0xe8dd0c).bucketColor(0xe8dd0c).displayName('IPA')
 })
 
+/*
+onEvent('item.modification', event => { var ticksToSmeltOneItem = 200 var baseBlockBurnTime = ticksToSmeltOneItem *4.5
+	event.modify('minecraft:axolotl_bucket', item => {
+		item.burnTime = baseBlockBurnTime * 9 
+	})
+})
+*/
 console.info('all things loaded successfully?')
