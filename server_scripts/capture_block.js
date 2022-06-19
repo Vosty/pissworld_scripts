@@ -4,6 +4,8 @@ const COMPASS_ITEM_ID = 'kubejs:finders_compass'
 
 const LEADERBOARD_COMMAND = 'leaderboard'
 
+const RESET_COMMAND = 'PleaseDontTypeThisAsAJokeLeaderBoardReset'
+
 const UNKNOWN_PLAYER_NAME = '?????'
 
 const BUFF_APPLY_RATE_MINS = 10
@@ -180,51 +182,6 @@ onEvent('block.place', event => {
 
 
 
-onEvent('block.break', function (event) {
-	let world = event.level
-
-	if (world.side !== "SERVER") {
-		return
-	}
-
-	if (event.block.id === STEAL_BLOCK_ID) {
-		let player = event.player
-		if (!player) {
-			event.server.tell('The Soul of Blessings was broken, but not by a player?')
-			event.server.persistentData.steal_block_placed = false
-			event.server.persistentData.steal_block_shared = false
-			event.server.persistentData.steal_block_owner = UNKNOWN_PLAYER_NAME
-			return
-		}
-
-		if ((event.server.persistentData.steal_block_owner && player.toString().equals(event.server.persistentData.steal_block_owner)) && !TEST_MODE) {
-			//To keep things simple in regards to preventing leaderboard abuse, you can't break your own SUPER CUBE
-			//Place it correctly the right time lol
-			event.player.tell(`You can't break your own placed Soul of Blessings`)
-			event.player.tell('Too bad? Cry about it...')
-			event.cancel()
-			return
-		}
-
-		let playerData = getPlayerLeaderBoardStats(player.toString(), event.server)
-
-		if (event.server.persistentData.steal_block_shared) { //Exists and is true
-			event.server.tell(`${player} has stolen the Soul of Blessings from the spawn!`)
-			playerData.public_captures++
-			playerData.captures++
-		} else {
-			event.server.tell(`${player} has found and broken ${event.server.persistentData.steal_block_owner}'s placed Soul of Blessings!`)
-			playerData.captures++
-		}
-
-		event.server.persistentData.steal_block_placed = false
-		event.server.persistentData.steal_block_shared = false
-		event.server.persistentData.steal_block_owner = player.toString()
-		updateLeaderBoardStats(player.toString(), event.server, playerData)
-	}
-})
-
-
 onEvent('item.right_click', event => {
 	let world = event.getLevel()
 
@@ -236,32 +193,63 @@ onEvent('item.right_click', event => {
 
 	if (item.id === COMPASS_ITEM_ID) {
 		let player = event.getPlayer()
-		if (!event.server.persistentData.steal_block_owner) {
-			player.tell('UNINITIALIZED')
-			return
-		}
-		 else if (!event.server.persistentData.steal_block_placed) { // Exists or false
-			player.tell(`The Soul of Blessings has not been placed by ${event.server.persistentData.steal_block_owner}`)
-			return
-		}
-		else if (event.server.persistentData.steal_block_shared) {
-			player.tell('The Soul of Blessings rests peacefully at the spawn, giving blessings to all')
-			player.damageHeldItem(event.hand, 1)
-			return
-		} else if (event.server.persistentData.steal_block_placed && player.level.dimension !== event.server.persistentData.steal_block_location.dimension) {
-			player.tell('The Soul of Blessings rests in another dimension...')
-			player.damageHeldItem(event.hand, 1)
-			return
+		let lookingAt = player.rayTrace(player.reachDistance)
+		if (lookingAt && lookingAt.block && (lookingAt.block == STEAL_BLOCK_ID)) {
+			if ((event.server.persistentData.steal_block_owner && player.toString() === event.server.persistentData.steal_block_owner) && !TEST_MODE) {
+				//To keep things simple in regards to preventing leaderboard abuse, you can't break your own SUPER CUBE
+				//Place it correctly the right time lol
+				player.tell(`You can't break your own placed Soul of Blessings`)
+				player.tell('Too bad? Cry about it...')
+				event.cancel()
+				return
+			}
+	
+			let playerData = getPlayerLeaderBoardStats(player.toString(), event.server)
+	
+			if (event.server.persistentData.steal_block_shared) { //Exists and is true
+				event.server.tell(`${player} has stolen the Soul of Blessings from the spawn!`)
+				playerData.public_captures++
+				playerData.captures++
+			} else {
+				event.server.tell(`${player} has found and broken ${event.server.persistentData.steal_block_owner}'s placed Soul of Blessings!`)
+				playerData.captures++
+			}
+
+			lookingAt.block.set('minecraft:air')
+			player.runCommandSilent(`/playsound minecraft:beacon.activate master ${player}`)
+			player.give(STEAL_BLOCK_ID)
+			event.server.persistentData.steal_block_placed = false
+			event.server.persistentData.steal_block_shared = false
+			event.server.persistentData.steal_block_owner = player.toString()
+			updateLeaderBoardStats(player.toString(), event.server, playerData)
 		} else {
-			let loc = event.server.persistentData.steal_block_location
-			let dx = loc.x - player.x
-			let dy = loc.y - player.y
-			let dz = loc.z - player.z
-			let dist = Math.round(Math.sqrt(Math.pow(dx,2) + Math.pow(dy,2) + Math.pow(dz,2)))
-			player.tell(`${event.server.persistentData.steal_block_owner}'s Soul of Blessings is hidden ${dist} blocks away`)
-			player.damageHeldItem(event.hand, 10)
-			return
-		}
+			if (!event.server.persistentData.steal_block_owner) {
+				player.tell('UNINITIALIZED')
+				return
+			}
+			 else if (!event.server.persistentData.steal_block_placed) { // Exists or false
+				player.tell(`The Soul of Blessings has not been placed by ${event.server.persistentData.steal_block_owner}`)
+				return
+			}
+			else if (event.server.persistentData.steal_block_shared) {
+				player.tell('The Soul of Blessings rests peacefully at the spawn, giving blessings to all')
+				player.damageHeldItem(event.hand, 1)
+				return
+			} else if (event.server.persistentData.steal_block_placed && player.level.dimension !== event.server.persistentData.steal_block_location.dimension) {
+				player.tell('The Soul of Blessings rests in another dimension...')
+				player.damageHeldItem(event.hand, 1)
+				return
+			} else {
+				let loc = event.server.persistentData.steal_block_location
+				let dx = loc.x - player.x
+				let dy = loc.y - player.y
+				let dz = loc.z - player.z
+				let dist = Math.round(Math.sqrt(Math.pow(dx,2) + Math.pow(dy,2) + Math.pow(dz,2)))
+				player.tell(`${event.server.persistentData.steal_block_owner}'s Soul of Blessings is hidden ${dist} blocks away`)
+				player.damageHeldItem(event.hand, 10)
+				return
+			}
+		}	
 	}
 })
 
@@ -282,6 +270,7 @@ onEvent('server.load', function(event) {
 			if (otherPlayers.length > 0) {
 				// Other players are online, they get minutes held stat
 				leaderData.minutes_held += BUFF_APPLY_RATE_MINS
+				updateLeaderBoardStats(callback.server.persistentData.steal_block_owner, callback.server, leaderData)
 			}
 
 			if (otherPlayers.length > 0 && isPlayerOnline(callback.server.persistentData.steal_block_owner, callback.server)) {
@@ -292,9 +281,9 @@ onEvent('server.load', function(event) {
 					otherPlayers[i].tell(`${callback.server.persistentData.steal_block_owner} is receiving buffs from their desecration of the Soul of Blessings`)
 					applyPotionBuff(scumbag, callback.server)
 					leaderData.buffs_received++
+					updateLeaderBoardStats(callback.server.persistentData.steal_block_owner, callback.server, leaderData)
 				}
 			}
-			updateLeaderBoardStats(callback.server.persistentData.steal_block_owner, callback.server, leaderData)
 			callback.reschedule()
 			return
 		// Placed at the spawn
@@ -343,4 +332,9 @@ onEvent('player.chat', function (event) {
 		event.cancel()
 		return
   	}
+	  if(message.startsWith(COMMAND_PREFIX + RESET_COMMAND + ' ' + 'YESYESYES') && event.player.isCreativeMode()) {
+		console.info('DELETING BOUNTY LEADERBOARD DATA')
+		event.server.persistentData.capture_leaderboard = NBT.listTag()
+	  }
+
 })

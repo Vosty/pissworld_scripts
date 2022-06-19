@@ -6,7 +6,7 @@ settings.logSkippedRecipes = false
 settings.logErroringRecipes = true
 
 //CONFIGS
-const TEST_MODE = false //Allows players to do things like invade themselves
+const TEST_MODE = true //Allows players to do things like invade themselves
 
 const COMMAND_PREFIX = '!'
 
@@ -177,11 +177,7 @@ onEvent('recipes', event => {
 		Fluid.of('kubejs:sweet_wort', 1000)
 	]).processingTime(100).heated()
 	event.recipes.create.milling('kubejs:yeast', ['#forge:mushrooms'])
-	event.recipes.create.mixing(Fluid.of('kubejs:yeast_water', 500), [
-		Fluid.of('kubejs:yeast_water', 250),
-		Fluid.of('minecraft:water', 250)
-	]).processingTime(100).heated()
-	event.recipes.create.mixing(Fluid.of('kubejs:yeast_water', 250), [
+	event.recipes.create.mixing([Fluid.of('kubejs:yeast_water', 250),Item.of('kubejs:yeast', 1),], [
 		Item.of('kubejs:yeast', 1),
 		Fluid.of('minecraft:water', 250)
 	]).processingTime(50).heated()
@@ -215,7 +211,9 @@ onEvent('recipes', event => {
 		'SSS'
 		], {
 			S: 'minecraft:deepslate',
-		})
+	})
+
+	manaInfusion(event, 'tconstruct:dragon_scale', 'minecraft:dragon_head', 1000000)
 
 	//Convert
 	event.shapeless('1x quark:gold_bars', ['1x tconstruct:gold_bars'])

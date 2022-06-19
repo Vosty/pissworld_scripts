@@ -82,7 +82,7 @@ onEvent('block.registry', event => {
 	event.create('soapstone_mark').displayName('Summon Sign').defaultCutout().box(0, 0, 0, 16, 1, 16, true).noItem().noDrops().fullBlock(false)
 
 	//CTF
-	event.create('steal_block').displayName('Soul of Blessings').hardness(15.0).resistance(1200.0)
+	event.create('steal_block').displayName('Soul of Blessings').hardness(-1.0).resistance(3600000.0)
 	event.create('recepticle').displayName('Blessing Altar').hardness(-1.0).resistance(3600000.0)
 })
 
