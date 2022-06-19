@@ -96,9 +96,12 @@ onEvent('fluid.registry', event => {
 	event.create('beer').thinTexture(0xe8cb0c).bucketColor(0xe8cb0c).displayName('Beer')
 	event.create('ipa').thinTexture(0xe8dd0c).bucketColor(0xe8dd0c).displayName('IPA')
 })
-
+// makes axolotls furnace fuel
 /*
-onEvent('item.modification', event => { var ticksToSmeltOneItem = 200 var baseBlockBurnTime = ticksToSmeltOneItem *4.5
+onEvent('item.modification', event => { 
+	let ticksToSmeltOneItem = 200
+	let baseBlockBurnTime = ticksToSmeltOneItem * 4.5
+	
 	event.modify('minecraft:axolotl_bucket', item => {
 		item.burnTime = baseBlockBurnTime * 9 
 	})
