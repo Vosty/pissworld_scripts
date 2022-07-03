@@ -49,7 +49,7 @@ let getWayMarkByPos = function(event, dimension, x, y, z) {
 	waymarks = event.server.persistentData.waymarks
 	let target = null
 	waymarks.forEach(wm => {
-		if (dimension === wm.dimension && x == wm.x && y== wm.y && z == wm.z) {
+		if (dimension.toString() === wm.dimension && x == wm.x && y== wm.y && z == wm.z) {
 			target = wm
 		}
 	})
@@ -62,8 +62,8 @@ let getWayMarkByPos = function(event, dimension, x, y, z) {
 // Kind of obnoxious on purpose, to encourage players to rename their damn waymarks
 // Let the shaming begin
 let waymarkNameGenerator = function(markData) {
-	let name = markData.owner
-	switch (markData.dimension) {
+	let name = markData.owner.toString()
+	switch (markData.dimension.toString()) {
 		case 'minecraft:overworld':
 			name+='OW'
 			break
@@ -96,7 +96,7 @@ let waymarkProximityCheck = function(event, player) {
 	waymarks = event.server.persistentData.waymarks
 	let target = false
 	waymarks.forEach(wm => {
-		if (event.level.dimension === wm.dimension) {
+		if (event.level.dimension.toString() === wm.dimension.toString()) {
 			let dx = wm.x - player.x
 			let dy = wm.y - player.y
 			let dz = wm.z - player.z
@@ -133,7 +133,7 @@ let getNearbySafeSpot = function(event, dimension, posX, posY, posZ) {
 	let allWorlds = event.server.allLevels
 	let world
 	allWorlds.forEach(wld => {
-		if (dimension === wld.dimension) {
+		if (dimension.toString() === wld.dimension.toString()) {
 			world = wld
 		}
 	})
@@ -199,7 +199,7 @@ onEvent('item.right_click', event => {
 				markData.x = lookingAt.block.x
 				markData.y = lookingAt.block.y
 				markData.z = lookingAt.block.z
-				markData.dimension = world.dimension
+				markData.dimension = world.dimension.toString()
 				markData.public = publicWaymark
 				markData.owner = playername
 				markData.markName = waymarkNameGenerator(markData)
@@ -276,7 +276,7 @@ onEvent('player.chat', function (event) {
 			if (wm.public) {
 				wmList.append(Text.of(wm.markName).yellow())
 				wmList.append('  ') //TODO: Get better formatting than this
-			} else if (wm.owner === event.player.name) {
+			} else if (wm.owner.equals(event.player.toString())) {
 				wmList.append(Text.of(wm.markName).gray().italic())
 				wmList.append('  ')
 
@@ -300,7 +300,8 @@ onEvent('player.chat', function (event) {
 				event.cancel()
 				return
 			}
-			if (wm.owner !== event.player.name) {
+			if (!wm.owner.toString().equals(event.player.toString())) {
+				console.log(`Owner: ${wm.owner}    Attempter; ${event.player}`)
 				event.player.tell('You can not rename waymarks you do not own!')
 				event.cancel
 				return
@@ -341,13 +342,13 @@ onEvent('block.break', function (event) {
 
 		for (let i = 0; i < event.server.persistentData.waymarks.length; i++) {
 			let wm = event.server.persistentData.waymarks.get(i)
-			if (world.dimension === wm.dimension && block.x == wm.x && block.y == wm.y && block.z == wm.z) {
+			if (world.dimension.toString() === wm.dimension && block.x == wm.x && block.y == wm.y && block.z == wm.z) {
 				event.server.persistentData.waymarks.remove(i)
 				event.player.tell(`Waymark ${wm.markName} removed`)
 				return
 			}
 		}
-		console.info(`No waymark found with position ${world.dimension} ${block.x} ${block.y} ${block.z}`)
+		console.info(`No waymark found with position ${world.dimension.toString()} ${block.x} ${block.y} ${block.z}`)
 		event.player.tell('Destroyed a waymark core with no registered position.')
 		event.player.tell('....What did you do?')
 	}

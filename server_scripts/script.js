@@ -371,7 +371,7 @@ onEvent('item.right_click', event => {
 				separation_crystal_pos.x = player.x
 				separation_crystal_pos.y = player.y
 				separation_crystal_pos.z = player.z
-				separation_crystal_pos.dimension = player.level.dimension
+				separation_crystal_pos.dimension = player.level.dimension.toString()
 				player.persistentData.separation_pos = separation_crystal_pos
 				console.log(player.persistentData.separation_pos)
 
@@ -455,7 +455,7 @@ onEvent('block.right_click', event => {
 			p.tell(`type ${COMMAND_PREFIX}${WHITE_SOAPSTONE_COMMAND} to be summoned`)
 		})
 		summon_sign_pos = event.block.pos
-		summon_sign_dim = event.block.dimension
+		summon_sign_dim = event.block.dimension.toString()
 		summoner = player.toString()
 		event.server.scheduleInTicks(WHITE_SOAPSTONE_TIMEOUT_TIME_IN_TICKS, function(callback) {
 			summon_sign_pos = null
@@ -497,7 +497,7 @@ onEvent('player.chat', function (event) {
 		separation_crystal_pos.x = event.player.x
 		separation_crystal_pos.y = event.player.y
 		separation_crystal_pos.z = event.player.z
-		separation_crystal_pos.dimension = event.player.level.dimension
+		separation_crystal_pos.dimension = event.player.level.dimension.toString()
 		event.player.persistentData.separation_pos = separation_crystal_pos
 
 	    event.server.scheduleInTicks(WHITE_SOAPSTONE_SUMMON_TIME_IN_TICKS, function(callback) {
@@ -561,7 +561,7 @@ onEvent('entity.death', function(event) {
   			damagePlayer.persistentData.red_kill_score = damagePlayer.persistentData.red_kill_score + 1
   		}
   }
-  if (damagePlayer && event.server.persistentData.bountyTarget && deadEntity.toString().equals(event.server.persistentData.bountyTarget)) {
+  if (damagePlayer && event.server.persistentData.bountyTarget && deadEntity.toString().equals(event.server.persistentData.bountyTarget.toString())) {
   			//Mission accomplished
   			event.server.tell(`${damagePlayer} has claimed the bounty on ${event.server.persistentData.bountyTarget}`)
   			event.server.runCommandSilent(`/givgit e ${damagePlayer} kubejs:kill_token ${event.server.persistentData.bountyScore}`)
